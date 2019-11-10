@@ -41,7 +41,8 @@ version = "0.2.1c Newmap1"
 #TODO: add server configuration
 
 #gh stuff
-gh_factions = {"outcasts":ImageColor.getrgb("#7954a8"),"empire":ImageColor.getrgb("#f05e1b"),"labyrinth":ImageColor.getrgb("#bff360"),
+gh_factions = {"watch":ImageColor.getrgb("#607fac"),"cadets":ImageColor.getrgb("#6d8a3c"),
+               "outcasts":ImageColor.getrgb("#7954a8"),"empire":ImageColor.getrgb("#f05e1b"),"labyrinth":ImageColor.getrgb("#bff360"),
                "phalanx":ImageColor.getrgb("#ffcc00"),"evil":(173, 20, 87),"legion":ImageColor.getrgb("#3498db"),"ghpd":ImageColor.getrgb("#b8d6e7"),
                "neutral":(255,255,255), "independent":(163, 145, 108)}
 #"x":ImageColor.getrgb("x"),
@@ -767,7 +768,7 @@ async def augment(ctx, classification=None, card=None):
         await ctx.send(f"No {card.title()} augment defined.")
 
 
-@bot.command(description="",aliases=["pluck"])
+@bot.command(description="Roll on the pact augment table. Upright or Reverse.",aliases=["pluck"])
 async def pactluck(ctx, judgement=None):
     global pactfeed
     #print(pactfeed)
@@ -776,9 +777,9 @@ async def pactluck(ctx, judgement=None):
         return
     augcolour=discord.Colour(0xBF9000)
     #cards=["Fool","Magician","Priestess","Empress","Emperor","Hierophant","Lovers","Chariot","Justice","Hermit","Wheel of Fortune","Strength","Hanged Man","Death","Temperance","Devil","Tower","Star","Moon","Sun","Judgement","World"]
-    if judgement=="upright":
+    if judgement=="upright" or judgement=="u":
         augindex=1
-    elif judgement=="reverse":
+    elif judgement=="reverse" or judgement=="r":
         augindex=2
     else:
         await ctx.send("Need to know the judgement. Upright or reverse (good or bad)?")

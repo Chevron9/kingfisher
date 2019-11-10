@@ -29,7 +29,7 @@ from pytz import timezone
 from ruamel.yaml import YAML
 from operator import itemgetter
 
-version = "0.2.1a Turn Tracker"
+version = "0.2.1c Newmap1"
 ###useful resources
 #for colours
 #www.htmlcsscolor.com/hex
@@ -41,29 +41,41 @@ version = "0.2.1a Turn Tracker"
 #TODO: add server configuration
 
 #gh stuff
-gh_factions = {"grove":ImageColor.getrgb("#c9781e"),"utopia":ImageColor.getrgb("#c72727"),"vanguard":ImageColor.getrgb("#2ec870"),"labyrinth":ImageColor.getrgb("#bff360"),
-               "phalanx":ImageColor.getrgb("#ffcc00"),
-               "lost":ImageColor.getrgb("#ffb293"),"convocation":ImageColor.getrgb("#8949ca"),"neutral":(255,255,255), "independent":(163, 145, 108)}
+gh_factions = {"watch":ImageColor.getrgb("#607fac"),"cadets":ImageColor.getrgb("#6d8a3c"),
+               "outcasts":ImageColor.getrgb("#7954a8"),"empire":ImageColor.getrgb("#f05e1b"),"labyrinth":ImageColor.getrgb("#bff360"),
+               "phalanx":ImageColor.getrgb("#ffcc00"),"evil":(173, 20, 87),"legion":ImageColor.getrgb("#3498db"),"ghpd":ImageColor.getrgb("#b8d6e7"),
+               "neutral":(255,255,255), "independent":(163, 145, 108)}
 #"x":ImageColor.getrgb("x"),
 #
 #old factions: "division":(76, 140, 255), "prestige":(179, 86, 243), "daybreak":(236,42,18), "elite":(241, 196, 15),
-# "demons":ImageColor.getrgb("#ff7a00"),"valhalla":(241, 196, 15),
+#"demons":ImageColor.getrgb("#ff7a00"),"valhalla":(241, 196, 15),
 #"court":(101, 111, 255),"dominion":(192, 49, 53),"children":(155, 89, 182),"fixers":ImageColor.getrgb("#f8e900"),
 #"prosperity":ImageColor.getrgb("#d4af37") "safeguard":ImageColor.getrgb("#8f34e2")
 #"warmongers":ImageColor.getrgb("#f18f22"),"haven":ImageColor.getrgb("#a26cfc"),"union":ImageColor.getrgb("#c40000"),"stronghold":ImageColor.getrgb("#7498b4") ,
 #"avalon":(173, 20, 87),"uplift":(26, 151, 73), "veil":ImageColor.getrgb("#3498db"),"royals":ImageColor.getrgb("#ff69b4"),
+#"crew":ImageColor.getrgb("#c9781e"),"utopia":ImageColor.getrgb("#c72727"),lambs":ImageColor.getrgb("#178080"),"vanguard":ImageColor.getrgb("#2ec870"),
+#"lost":ImageColor.getrgb("#ffb293"),"convocation":ImageColor.getrgb("#8949ca"),
 
 # discord default colours: https://www.reddit.com/r/discordapp/comments/849bxc/what_are_the_hex_values_of_all_the_default_role/dvo5k3g/
 
-gh_areas = [(100,122),(132.67,120),(192,118.6666667),(234.6666667,140.6666667),(268.6666667,165.3333333),(313.3333333,129.3333333),(372.6666667,126),(429.3333333,60),
-            (473.3333333,20),(458.6666667,81.33333333),(498.6666667,53.33333333),(477.3333333,130),(482,162.6666667),(492,217.3333333),(415.3333333,207.3333333),(369.3333333,192),
-            (293.3333333,194.6666667),(226.6666667,203.3333333),(166.6666667,184),(150.6666667,229.3333333),(113.3333333,224.6666667),(114,283.3333333),(181.3333333,234),
-            (215.3333333,228.6666667),(262.6666667,238),(223.3333333,286),(379.3333333,230.6666667),(440.6666667,272.6666667),(464.6666667,241.3333333),(498,291.3333333),(490,320),
-            (410,308),(351.3333333,278),(357.3333333,318),(250.6666667,322),(214.6666667,338),(134.6666667,309.3333333),(170.6666667,344.6666667),(166.6666667,378),(166,428),
-            (239.3333333,392),(244.6666667,428),(278,376.6666667),(318,387.3333333),(316.6666667,433.3333333),(393.3333333,352.6666667),(359.3333333,412.6666667),(422.6666667,387.3333333),
-            (458.6666667,378),(490.6666667,394.6666667),(494,458.6666667),(430.6666667,420.6666667),(439.3333333,459.3333333),(350.6666667,475.3333333),(271.3333333,494),
-            (229.3333333,499.3333333),(190,484.6666667),(148,460),(174.6666667,509.3333333),(190.6666667,545.3333333),(278,546.6666667),(331.3333333,524),(380,553.3333333),
-            (422.6666667,525.3333333),(455.3333333,512.6666667),(498,525.3333333)]
+#old_gh_areas = [(100,122),(132.67,120),(192,118.6666667),(234.6666667,140.6666667),(268.6666667,165.3333333),(313.3333333,129.3333333),(372.6666667,126),(429.3333333,60),
+#                (473.3333333,20),(458.6666667,81.33333333),(498.6666667,53.33333333),(477.3333333,130),(482,162.6666667),(492,217.3333333),(415.3333333,207.3333333),(369.3333333,192),
+#                (293.3333333,194.6666667),(226.6666667,203.3333333),(166.6666667,184),(150.6666667,229.3333333),(113.3333333,224.6666667),(114,283.3333333),(181.3333333,234),
+#                (215.3333333,228.6666667),(262.6666667,238),(223.3333333,286),(379.3333333,230.6666667),(440.6666667,272.6666667),(464.6666667,241.3333333),(498,291.3333333),(490,320),
+#                (410,308),(351.3333333,278),(357.3333333,318),(250.6666667,322),(214.6666667,338),(134.6666667,309.3333333),(170.6666667,344.6666667),(166.6666667,378),(166,428),
+#                (239.3333333,392),(244.6666667,428),(278,376.6666667),(318,387.3333333),(316.6666667,433.3333333),(393.3333333,352.6666667),(359.3333333,412.6666667),(422.6666667,387.3333333),
+#                (458.6666667,378),(490.6666667,394.6666667),(494,458.6666667),(430.6666667,420.6666667),(439.3333333,459.3333333),(350.6666667,475.3333333),(271.3333333,494),
+#                (229.3333333,499.3333333),(190,484.6666667),(148,460),(174.6666667,509.3333333),(190.6666667,545.3333333),(278,546.6666667),(331.3333333,524),(380,553.3333333),
+#                (422.6666667,525.3333333),(455.3333333,512.6666667),(498,525.3333333)]
+
+gh_areas = [(330.00,352.00),(412.00,226.00),(724.00,224.00),(688.00,350.00),(842.00,386.00),(936.00,212.00),(1164.00,410.00),(1300.00,214.00),(1424.00,160.00),
+            (1524.00,50.00),(1538.00,176.00),(1402.00,328.00),(1520.00,352.00),(1528.00,498.00),(1414.00,476.00),(1098.00,536.00),(858.00,550.00),(690.00,508.00),(464.00,424.00),
+            (494.00,524.00),(358.00,604.00),(376.00,714.00),(486.00,754.00),(686.00,656.00),(718.00,726.00),(640.00,728.00),(972.00,624.00),(1360.00,696.00),(1502.00,676.00),
+            (1610.00,696.00),(1630.00,908.00),(1322.00,796.00),(1090.00,816.00),(828.00,808.00),(734.00,914.00),(750.00,1036.00),
+            (498.00,976.00),(512.00,1082.00),(582.00,1110.00),(412.00,1260.00),(628.00,1302.00),(750.00,1190.00),(876.00,1054.00),(1090.00,1044.00),(1064.00,1174.00),(1202.00,1168.00),
+            (1034.00,1320.00),(1218.00,1402.00),(1312.00,1046.00),(1488.00,1058.00),(1646.00,1326.00),(1456.00,1288.00),(1392.00,1406.00),(1044.00,1428.00),(824.00,1406.00),
+            (576.00,1430.00),(486.00,1512.00),(420.00,1402.00),(426.00,1528.00),(606.00,1652.00),(890.00,1664.00),(1096.00,1646.00),(1260.00,1640.00),(1440.00,1624.50),(1489.50,1438.50),
+            (1608.00,1599.00)]
 
 typ_colours = {"Bash":0x0137f6,"Pierce":0xffa500,"Cut":0xb22649,"Freeze":0x00ecff,"Shock":0xd6ff00,"Rend":0x9937a5,"Burn":0x0fe754, "Poison":0x334403,
                "Armor":0x565759,"Engine":0x565759,"Wheel":0x565759,"System":0x565759,"Structural":0x565759}
@@ -110,6 +122,8 @@ augSheet = RefSheet.worksheet("Augments")
 augfeed = augSheet.get_all_values()
 triggerSheet = RefSheet.worksheet("Triggers")
 triggerfeed = triggerSheet.get_all_values()
+pactfeed = RefSheet.worksheet("Pactluck")
+pactfeed = pactfeed.get_all_values()
 
 #vials
 VialDoc = gc.open_by_key("1yksmYY7q1GKx4tXVpb7oSxffgEh--hOvXkDwLVgCdlg") # arcan's vial doc
@@ -173,7 +187,7 @@ async def on_ready():
 async def mapUpdate(faction,square,sid):
     detroitmap = Image.open(f"map_{sid}/factionmap.png")
     legend = Image.open(f"map_{sid}/Legend_alpha.png")
-    bg = Image.open(f"map_{sid}/background.png") #just plain white to make it visible against discord BG
+    #bg = Image.open(f"map_{sid}/background.png") #just plain white to make it visible against discord BG
 
     if (sid=="gh") or (sid=="test"):
         ImageDraw.floodfill(detroitmap, gh_areas[square-1], (255,255,255))
@@ -181,7 +195,7 @@ async def mapUpdate(faction,square,sid):
 
     detroitmap.save(f"map_{sid}/factionmap.png") #only the coloured squares
     detroitmap = Image.alpha_composite(detroitmap,legend)
-    detroitmap = Image.composite(detroitmap, bg, detroitmap)
+    #detroitmap = Image.composite(detroitmap, bg, detroitmap)
     detroitmap.save(f"map_{sid}/map.png") #output
 
 
@@ -205,6 +219,8 @@ async def int_to_roman(input):
 async def sid(loc):
     if loc==465651565089259521:
         sid="gh"
+    elif loc==573815526133071873:
+        sid="gh" #shardforge server, attached to GH
     elif loc==406587085278150656:
         sid="segovia"
     elif loc==434729592352276480:
@@ -217,6 +233,8 @@ async def sid(loc):
         sid="gaming_inc"
     elif loc==570300070252249089:
         sid="portland"
+    elif loc==636431438916616192:
+        sid="deathland"
     else:
         sid="undefined"
     return sid
@@ -327,6 +345,11 @@ async def on_message(message):
         #checks-public 587718887936753710
         #checks-private 587718930483773509
 
+        #talk-private 603035662018543618
+        #talk-private-archive 614168400523952181
+
+        #quest-request 601810695583039557
+
         #test-beta 538633337191923714
         #test-dev 435874236297379861
         if not_me(message):
@@ -334,12 +357,26 @@ async def on_message(message):
                 target=discord.utils.find(lambda m:m.id==587718930483773509,message.guild.channels)
                 await target.send(f"**{message.content}** sent by {message.author.name}, ID `{message.author.id}` at {message.created_at}")
                 await message.delete()
+            #private-talk
+            elif message.channel.id==603035662018543618:
+                target=discord.utils.find(lambda m:m.id==614168400523952181,message.guild.channels)
+                await target.send(f"{message.author.name}: {message.content}")
+            #quest-requests
+            elif message.channel.id==601810695583039557:
+                target=await message.channel.fetch_message(601812539319386123)
+                target=discord.utils.get(target.reactions,emoji="\U0000270d") #writing hand
+                usrs=await target.users().flatten()
+                if message.author not in usrs:
+                    await message.channel.send(f"{message.author.mention}: Think you're above the rules, huh? Read the pins, you illiterate baboon. Denied.")
+                    await message.delete()
 
             #custom messages. Mostly jokes.
             elif message.content==("DOCTOR NEFARIOUS"):
                 await message.channel.send("🍋")
             elif message.content==("Kingfisher, play Despacito"):
                 await message.channel.send("ɴᴏᴡ ᴘʟᴀʏɪɴɢ: Despacito \n ───────────────⚪─────────────────── \n  ◄◄⠀▐▐ ⠀►►⠀⠀ ⠀ 1:17 / 3:48 ⠀ ───○ 🔊⠀ ᴴᴰ ⚙ ❐ ⊏⊐")
+            elif message.content==("F"):
+                await message.channel.send("f")
 
         await bot.process_commands(message)
 
@@ -363,8 +400,9 @@ async def on_command_error(context, exception):
         if type(exception)==discord.ext.commands.errors.CommandOnCooldown:
             await context.send(exception)
 
-        print('Ignoring exception in command {}:'.format(context.command), file=sys.stderr)
-        traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
+        if not type(exception)==discord.ext.commands.errors.CommandNotFound:
+            print('Ignoring exception in command {}:'.format(context.command), file=sys.stderr)
+            traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
 
 
 @bot.command(description="Makes the bot leave the server.",hidden=True)
@@ -393,6 +431,29 @@ async def order67(ctx):
 @bot.command(description="Need help? Want to ask for new features? Visit the Nest, the central server for all your Kingfisher needs.",hidden=True)
 async def nest(ctx):
     await ctx.send("https://discord.gg/gxQVAbA")
+
+
+@bot.command(description="Deletes message content",hidden=True)
+async def purge(ctx,limiter=100):
+    if ctx.message.author.id not in owner:
+        await ctx.send("😰")
+        return
+    try:
+        await ctx.message.channel.purge(limit=limiter,bulk=True)
+    except discord.Forbidden:
+        await ctx.send("Insufficient priviliges.")
+
+
+@bot.command(description="New UTF release, who dis",hidden=True)
+async def emojiwatch(ctx,id):
+    target=await ctx.message.channel.fetch_message(id)
+    print(target.reactions)
+    target=discord.utils.get(target.reactions,emoji="\U0000270d") #writing hand
+    usrs=await target.users().flatten()
+    print(usrs)
+    print(usrs[0])
+    if ctx.author in usrs:
+        print("True!")
 
 
 #TODO: Conserve over restarts
@@ -537,6 +598,8 @@ async def updateFeed(ctx):
     augfeed = augSheet.get_all_values()
     triggerSheet = RefSheet.worksheet("Triggers")
     triggerfeed = triggerSheet.get_all_values()
+    pactfeed = RefSheet.worksheet("Pactluck")
+    pactfeed = pactfeed.get_all_values()
     await ctx.message.add_reaction("\U00002714")
 
 
@@ -677,7 +740,7 @@ async def augment(ctx, classification=None, card=None):
         return
     augcolour=discord.Colour(0xBF9000)
     classifications=["blaster","breaker","brute","changer","master","mover","shaker","stranger","striker","tinker","thinker","trump"]
-    cards=["fool","magi","nun","lady","lord","pope","lovers","chariot","strength","hermit","wheel","justice","hanged","death","temperance","devil","tower","star","moon","sun","judgement","world"]
+    cards=["fool","magi","priestess","lady","lord","pope","lovers","chariot","strength","hermit","wheel","justice","hanged","death","temperance","devil","tower","star","moon","sun","judgement","world"]
     if classification in cards:
         await ctx.send(augfeed[cards.index(classification)+1][1])
         return
@@ -703,6 +766,28 @@ async def augment(ctx, classification=None, card=None):
                     return
                     #await ctx.send(augs[i])
         await ctx.send(f"No {card.title()} augment defined.")
+
+
+@bot.command(description="Roll on the pact augment table. Upright or Reverse.",aliases=["pluck"])
+async def pactluck(ctx, judgement=None):
+    global pactfeed
+    #print(pactfeed)
+    if judgement is None:
+        await ctx.send("Need to know the judgement. Upright or reverse (good or bad)?")
+        return
+    augcolour=discord.Colour(0xBF9000)
+    #cards=["Fool","Magician","Priestess","Empress","Emperor","Hierophant","Lovers","Chariot","Justice","Hermit","Wheel of Fortune","Strength","Hanged Man","Death","Temperance","Devil","Tower","Star","Moon","Sun","Judgement","World"]
+    if judgement=="upright" or judgement=="u":
+        augindex=1
+    elif judgement=="reverse" or judgement=="r":
+        augindex=2
+    else:
+        await ctx.send("Need to know the judgement. Upright or reverse (good or bad)?")
+        return
+    out=random.randint(1,len(pactfeed)-1)
+    if pactfeed[out][augindex]!="":
+            embed = discord.Embed(title=f"{pactfeed[out][0]} Augment",description=pactfeed[out][augindex],colour=augcolour)
+            await ctx.send(embed=embed)
 
 
 @bot.command(description="Trigger warning.")
@@ -736,7 +821,7 @@ async def claim(ctx,faction=None,square:int = None):
     else:
         sid="test"
     if (ctx.message.channel.id != 358409511838547979) and (ctx.message.channel.id != 435874236297379861) and (ctx.message.channel.id != 478240151987027978):
-        #await bot.send_message(discord.User(id=owner[0]),f"Claiming in {ctx.message.channel}: {ctx.message.author.name}")
+
         await ctx.send(f"Can only claim in #faction-actions!")
         return
 
@@ -756,11 +841,9 @@ async def claim(ctx,faction=None,square:int = None):
     try:
         await mapUpdate(faction.casefold(),square,sid)
     except (KeyError,IndexError):
-        print("error!")
         await ctx.message.add_reaction("❌")
         return
     await ctx.send(f"Map updated. https://www.hivewiki.de/kingfisher/map_{sid}/map.png?nocaching={cacher}")
-    #await bot.send_file(ctx.message.channel,'Detroit_map.png')
 
 
 @bot.command(description="Bullying.",hidden=True)
@@ -997,6 +1080,14 @@ async def echo(ctx,*echo):
     print(ctx.message.channel)
     print(ctx.message.channel.id)
     await ctx.send(" ".join(echo))
+
+
+@bot.command(description="Math.", aliases=["m"],hidden=True)
+async def calc(ctx,formula):
+    if ctx.message.author.id not in owner:
+        await ctx.send("Math is banned.")
+        return
+    await ctx.send(f"`{formula}`= {eval(formula)}") #using eval is quite unsafe
 
 
 @bot.command(name="time",description="Stuck in bubble hell? Wonder when giao will be back?")
@@ -1443,7 +1534,7 @@ async def roll(ctx,formula="default",*comment):
         formula="1d6"
     elif formula=="default":
         formula="3d20+4"
-
+    modifier=0
     if "d" in formula.casefold():
         d_pattern=re.compile("(d|D)(\d)*")
         d_match=d_pattern.search(formula)
@@ -1455,6 +1546,7 @@ async def roll(ctx,formula="default",*comment):
     else:
         if "c" in formula.casefold():
             dice=10
+            modifier=5
             keep=True
         else:
             if (s_id=="portland"):
@@ -1469,16 +1561,17 @@ async def roll(ctx,formula="default",*comment):
             mod_pattern=re.compile("(\+\+|\-\-)(\d)*")
             mod_match=mod_pattern.search(formula)
             modifier=int(mod_match.group()[1:])
-            modifier=4+modifier
+            if "c" in formula.casefold():
+                modifier=5+modifier
+            else:
+                modifier=4+modifier
         else:
             mod_pattern=re.compile("(\+|\-)+(\d)*")
             mod_match=mod_pattern.search(formula)
             modifier=int(mod_match.group())
     else:
         if dice==20:
-            modifier=4
-        else:
-            modifier=0
+            modifier=4+modifier
     #print(f"modifier: {modifier}")
 
     brief=False
@@ -1610,6 +1703,8 @@ async def roll(ctx,formula="default",*comment):
                 else:
                     out_roll.append(f"{brief_match[k]}, ")
     if comment!="":
+        if comment[0]=="#" and comment[1]=="#":
+            comment=comment[1:]
         out_roll.append(f" #{' '.join(comment)}")
     await ctx.send(''.join(out_roll))
 
@@ -1830,7 +1925,7 @@ async def end(ctx, force=False,invoked=False,): #start=False
 
             if (i[3]==rem_turn) and (i[1]==cur_round):
                 name=await naming(ctx.guild,i[0])
-                await ctx.send(f"Reminder for {name} {i[2]}")
+                await ctx.send(f"Reminder for {name}: {i[2]}")
                 turn_tracker[chan]["reminder"].remove(i)
 
     turn_tracker[chan].update({"turn":cur_turn+1})
@@ -2262,7 +2357,8 @@ async def show(ctx, cape=None):
 @account.command(description="Use this to add your cape to the database and gain access to the other commands. Your cape name is your 'key'.", alias="create")
 async def make(ctx,cape=None,amount=0,income=0):
     loc=ctx.message.guild.id
-    if (ctx.message.channel.id != 478240151987027978) and (ctx.message.channel.id != 435874236297379861) and (ctx.message.channel.id != 537152965375688719) and (ctx.guild.id!=457290411698814980):
+    if (ctx.message.channel.id != 478240151987027978 and ctx.message.channel.id != 435874236297379861 and ctx.message.channel.id != 537152965375688719
+            and ctx.guild.id!=457290411698814980 and ctx.message.channel.id != 638118490628292612):
         await ctx.send("BoK only operates in #faction-actions!")
         return
     if cape is None:
@@ -2294,7 +2390,8 @@ async def make(ctx,cape=None,amount=0,income=0):
 @account.command(aliases=["u"], description="Keep track of expenses and gains with this.")
 async def update(ctx,cape, amount):
     loc=ctx.message.guild.id
-    if (ctx.message.channel.id != 478240151987027978) and (ctx.message.channel.id != 435874236297379861) and (ctx.message.channel.id != 537152965375688719) and (ctx.guild.id!=457290411698814980):
+    if (ctx.message.channel.id != 478240151987027978 and ctx.message.channel.id != 435874236297379861 and ctx.message.channel.id != 537152965375688719
+            and ctx.guild.id!=457290411698814980 and ctx.message.channel.id != 638118490628292612):
         await ctx.send("BoK only operates in #faction-actions!")
         return
     with open(f"cash{loc}.txt") as f:
@@ -2318,7 +2415,8 @@ async def update(ctx,cape, amount):
 @account.command(aliases=["s"], description="Send money to another account.")
 async def send(ctx,cape,target, amount):
     loc=ctx.message.guild.id
-    if (ctx.message.channel.id != 478240151987027978) and (ctx.message.channel.id != 435874236297379861) and (ctx.message.channel.id != 537152965375688719) and (ctx.guild.id!=457290411698814980):
+    if (ctx.message.channel.id != 478240151987027978 and ctx.message.channel.id != 435874236297379861 and ctx.message.channel.id != 537152965375688719
+            and ctx.guild.id!=457290411698814980 and ctx.message.channel.id != 638118490628292612):
         await ctx.send("BoK only operates in #faction-actions!")
         return
     with open(f"cash{loc}.txt") as f:
@@ -2349,7 +2447,8 @@ async def send(ctx,cape,target, amount):
 @account.command(aliases=["i"], description="Adjust your periodic income here. Use the weekly amount.")
 async def income(ctx,cape, amount):
     loc=ctx.message.guild.id
-    if (ctx.message.channel.id != 478240151987027978) and (ctx.message.channel.id != 435874236297379861) and (ctx.message.channel.id != 537152965375688719) and (ctx.guild.id!=457290411698814980):
+    if (ctx.message.channel.id != 478240151987027978 and ctx.message.channel.id != 435874236297379861 and ctx.message.channel.id != 537152965375688719
+            and ctx.guild.id!=457290411698814980 and ctx.message.channel.id != 638118490628292612):
         await ctx.send("BoK only operates in #faction-actions!")
         return
     with open(f"cash{loc}.txt") as f:
@@ -2371,113 +2470,137 @@ async def income(ctx,cape, amount):
 
 
 async def account_decay():
-        while True:
-            #trying a dirty fix for the reminders issue.
-            reminders=[]
-            with open(f"reminders.txt",mode="w+") as f:
-                f.seek(0)
-                f.truncate()
-                queue=sPlanner.queue
-                for i in queue:
-                    reminders.append({"time":i[0],'content':i.argument[0].cr_frame.f_locals['content'],'destination':i.argument[0].cr_frame.f_locals['self'].id})
-                json.dump(reminders,f)
+    await asyncio.sleep(60*1) #make sure the bot is initialized - this can be fixed better.
+    while True:
+        #trying a dirty fix for the reminders issue.
+        reminders=[]
+        with open(f"reminders.txt",mode="w+") as f:
+            f.seek(0)
+            f.truncate()
+            queue=sPlanner.queue
+            for i in queue:
+                reminders.append({"time":i[0],'content':i.argument[0].cr_frame.f_locals['content'],'destination':i.argument[0].cr_frame.f_locals['self'].id})
+            json.dump(reminders,f)
 
-            locs=[465651565089259521,457290411698814980]
-            decay=0.9**(1/7) #10% decay per week
-            #gh loc="465651565089259521"
-            #vanwiki loc="434729592352276480"
-            #LA loc = 457290411698814980
-            channel = bot.get_channel(478240151987027978) # channel ID goes here
-            LA_channel = bot.get_channel(457640092240969730) #la battle ooc
-            #test_channel=bot.get_channel(435874236297379861) #nest test-dev
-            #GH 478240151987027978
-            #vanwiki 435874236297379861
-            last_updated=[]
-            for loc in locs:
-                if os.path.isfile(f"decay{loc}.txt"):
-                    with open(f"decay{loc}.txt",mode="r+") as f:
-                        last_updated = json.load(f)
-                        if last_updated[0]-time.time()<-60*60*24:
-                            print("decaying...")
-                            if os.path.isfile(f"cash{loc}.txt"):
-                                with open(f"cash{loc}.txt",mode="r+") as g:
-                                    accounts = json.load(g)
-                                    g.seek(0)
-                                    g.truncate()
-                                    wealth=0
-                                    for i in accounts:
-                                        if loc==465651565089259521:
-                                            i[1]=round(i[1]*decay)
-                                        i[1]=i[1]+round((i[2]/7))
-                                        wealth+=i[1]
-                                    json.dump(accounts,g)
-                                if loc==465651565089259521:
-                                    await channel.send(f"Daily Expenses computed. Total accrued wealth: {wealth}$")
-                                if loc==457290411698814980:
-                                    await LA_channel.send(f"Daily Expenses computed. Total accrued wealth: {wealth}$")
-                            else:
-                                channel.send("No accounts on file.")
-                            f.seek(0)
-                            f.truncate()
-                            last_updated=[]
-                            last_updated.append(time.time())
-                            json.dump(last_updated,f)
-                else:
-                    with open(f"decay{loc}.txt",mode="w+") as f:
-                        f.seek(0)
-                        f.truncate()
-                        last_updated=[]
-                        last_updated.append(time.time())
-                        json.dump(last_updated,f)
-            await asyncio.sleep(60*60*3) # task runs every 3 hours
+        locs=[465651565089259521,457290411698814980,636431438916616192] #testing 434729592352276480
+        #GH_sid 478240151987027978
+        #vanwiki_sid 435874236297379861
+        #deathland 636431438916616192
 
+        #locs=[465651565089259521,457290411698814980,434729592352276480]
+        #test_channel=bot.get_channel(435874236297379861) #nest test-dev
 
-async def rank_decay():
-        c= 60 # c = 60, assuming a rating decay period of a month, and a typical rating of 150
-        # c is the result of 350=sqroot(typical rating**2+rating decay period*c)
-        loc=465651565089259521
-        #gh loc="465651565089259521"
-        #vanwiki loc="434729592352276480"
-        channel = bot.get_channel(478240151987027978) # channel ID goes here
-        #GH 478240151987027978 facacs
-        #vanwiki 435874236297379861 testing
+        decay=0.9**(1/7) #10% decay per week
+        #gh loc=465651565089259521
+        #vanwiki loc=434729592352276480
+        #LA loc = 457290411698814980
+        GH_channel = bot.get_channel(478240151987027978) #GH facacs # channel ID goes here
+        LA_channel = bot.get_channel(457640092240969730) #la battle ooc
+        DL_channel = bot.get_channel(636431438916616192)
+
         last_updated=[]
-        while True:
-            if os.path.isfile(f"glicko_decay{loc}.txt"):
-                with open(f"glicko_decay{loc}.txt",mode="r+") as f:
+        for loc in locs:
+            print(loc)
+            if os.path.isfile(f"decay{loc}.txt"):
+                print(f"decay{loc}.txt checked and exists")
+                with open(f"decay{loc}.txt",mode="r+") as f:
                     last_updated = json.load(f)
                     if last_updated[0]-time.time()<-60*60*24:
-                        if os.path.isfile(f"glicko{loc}.txt"):
-                            with open(f"glicko{loc}.txt",mode="r+") as g:
-                                ranks = json.load(g)
+                        print("decaying...")
+                        if os.path.isfile(f"cash{loc}.txt"):
+                            print("file exists")
+                            with open(f"cash{loc}.txt",mode="r+") as g:
+                                print("file opened")
+                                accounts = json.load(g)
                                 g.seek(0)
                                 g.truncate()
-                                avg_rank=0
-                                avg_rd=0
-                                for i in ranks:
-                                    if i[2]>150:
-                                        i[2]=min(round(math.sqrt(i[2]**2+c**2),2),350)
-                                    else:
-                                        i[2]=min(round(math.sqrt(i[2]**2+(c/2)**2),2),350)
-                                    avg_rank+=i[1]
-                                    avg_rd+=i[2]
-                                json.dump(ranks,g)
-                            await channel.send(f"Daily RD decay computed. Average Rating: {round(avg_rank/len(ranks),0)} Average RD: {round(avg_rd/len(ranks),0)}")
+                                wealth=0
+                                for i in accounts:
+                                    if loc==465651565089259521 or loc==434729592352276480 or await sid(loc)=="deathland":
+                                        i[1]=round(i[1]*decay)
+                                    i[1]=i[1]+round((i[2]/7))
+                                    wealth+=i[1]
+                                json.dump(accounts,g)
+
+                            print("Daily wealth message block reached")
+                            if loc==465651565089259521:
+                                print("printing Daily wealth message")
+                                await GH_channel.send(f"Daily Expenses computed. Total accrued wealth: {wealth}$")
+                                print("printed.")
+                            if loc==457290411698814980:
+                                await LA_channel.send(f"Daily Expenses computed. Total accrued wealth: {wealth}$")
+                            if await sid(loc)=="deathland":
+                                await DL_channel.send(f"Daily Expenses computed. Total accrued wealth: {wealth}$")
+                            #if loc==434729592352276480:
+                            #      print(test_channel)
+                            #      await test_channel.send("henlo")
+                            #      await test_channel.send(f"Daily Expenses computed. Total accrued wealth: {wealth}$")
                         else:
-                            channel.send("No ranks existing!")
+                            print(f"No accounts on file for {loc}.")
+                            #await test_channel.send("No accounts on file.")
                         f.seek(0)
                         f.truncate()
                         last_updated=[]
                         last_updated.append(time.time())
                         json.dump(last_updated,f)
             else:
-                with open(f"glicko_decay{loc}.txt",mode="w+") as f:
+                with open(f"decay{loc}.txt",mode="w+") as f:
+                    print("No decay file.")
                     f.seek(0)
                     f.truncate()
                     last_updated=[]
                     last_updated.append(time.time())
                     json.dump(last_updated,f)
-            await asyncio.sleep(60*60*3) # task runs every 3 hours
+        await asyncio.sleep(60*60*3) # task runs every 3 hours
+
+
+async def rank_decay():
+    await asyncio.sleep(60*1) #make sure the bot is initialized - this can be fixed better.
+    c= 60 # c = 60, assuming a rating decay period of a month, and a typical rating of 150
+    # c is the result of 350=sqroot(typical rating**2+rating decay period*c)
+    loc=465651565089259521
+    #gh loc="465651565089259521"
+    #vanwiki loc="434729592352276480"
+    channel = bot.get_channel(478240151987027978) # channel ID goes here
+    #GH 478240151987027978 facacs
+    #vanwiki 435874236297379861 testing
+    last_updated=[]
+    while True:
+        if os.path.isfile(f"glicko_decay{loc}.txt"):
+            with open(f"glicko_decay{loc}.txt",mode="r+") as f:
+                last_updated = json.load(f)
+                if last_updated[0]-time.time()<-60*60*24:
+                    if os.path.isfile(f"glicko{loc}.txt"):
+                        with open(f"glicko{loc}.txt",mode="r+") as g:
+                            ranks = json.load(g)
+                            g.seek(0)
+                            g.truncate()
+                            avg_rank=0
+                            avg_rd=0
+                            for i in ranks:
+                                if i[2]>150:
+                                    i[2]=min(round(math.sqrt(i[2]**2+c**2),2),350)
+                                else:
+                                    i[2]=min(round(math.sqrt(i[2]**2+(c/2)**2),2),350)
+                                avg_rank+=i[1]
+                                avg_rd+=i[2]
+                            json.dump(ranks,g)
+                        await channel.send(f"Daily RD decay computed. Average Rating: {round(avg_rank/len(ranks),0)} Average RD: {round(avg_rd/len(ranks),0)}")
+                    else:
+                        channel.send("No ranks existing!")
+                    f.seek(0)
+                    f.truncate()
+                    last_updated=[]
+                    last_updated.append(time.time())
+                    json.dump(last_updated,f)
+        else:
+            with open(f"glicko_decay{loc}.txt",mode="w+") as f:
+                f.seek(0)
+                f.truncate()
+                last_updated=[]
+                last_updated.append(time.time())
+                json.dump(last_updated,f)
+        await asyncio.sleep(60*60*3) # task runs every 3 hours
 
 
 ###Bot runs here

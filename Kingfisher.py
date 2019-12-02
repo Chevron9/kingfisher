@@ -41,7 +41,7 @@ version = "0.2.1c Newmap1"
 #TODO: add server configuration
 
 #gh stuff
-gh_factions = {"watch":ImageColor.getrgb("#607fac"),"cadets":ImageColor.getrgb("#6d8a3c"),
+gh_factions = {"warmongers":ImageColor.getrgb("#ff69b4"),"kami":(173, 20, 87),"watch":ImageColor.getrgb("#607fac"),"cadets":ImageColor.getrgb("#6d8a3c"),
                "outcasts":ImageColor.getrgb("#7954a8"),"empire":ImageColor.getrgb("#f05e1b"),"labyrinth":ImageColor.getrgb("#bff360"),
                "phalanx":ImageColor.getrgb("#ffcc00"),"evil":(173, 20, 87),"legion":ImageColor.getrgb("#3498db"),"ghpd":ImageColor.getrgb("#b8d6e7"),
                "neutral":(255,255,255), "independent":(163, 145, 108)}

@@ -2579,9 +2579,9 @@ async def rank_decay():
                             avg_rd=0
                             for i in ranks:
                                 if i[2]>150:
-                                    i[2]=min(round(math.sqrt(i[2]**2+c**2),2),350)
-                                else:
                                     i[2]=min(round(math.sqrt(i[2]**2+(c/2)**2),2),350)
+                                else:
+                                    i[2]=min(round(math.sqrt(i[2]**2+(c/3)**2),2),350)
                                 avg_rank+=i[1]
                                 avg_rd+=i[2]
                             json.dump(ranks,g)

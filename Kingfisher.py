@@ -44,7 +44,7 @@ version = "0.2.1d"
 gh_factions = {"warmongers":ImageColor.getrgb("#ff69b4"),"kami":(173, 20, 87),"watch":ImageColor.getrgb("#607fac"),"cadets":ImageColor.getrgb("#6d8a3c"),
                "polaris":ImageColor.getrgb("#7954a8"),"empire":ImageColor.getrgb("#f05e1b"),"labyrinth":ImageColor.getrgb("#bff360"),
                "phalanx":ImageColor.getrgb("#ffcc00"),"evil":(173, 20, 87),"legion":ImageColor.getrgb("#3498db"),"ghpd":ImageColor.getrgb("#b8d6e7"),
-               "vanguard":ImageColor.getrgb("#2ec870"),
+               "arboretum":ImageColor.getrgb("#2ec870"),
                "neutral":(255,255,255), "independent":(163, 145, 108)}
 #"x":ImageColor.getrgb("x"),
 #
@@ -1799,7 +1799,7 @@ async def tag(ctx, tag=None, content1=None, *,content2=None):
                 if i[0]==tag.casefold():
 
                     async def cleaner(ctx,text): #removes usermentions and replaces them with @display_name
-                        p_pattern=re.compile("<@!(\d*)>")
+                        p_pattern=re.compile("<@!*(\d*)>")
                         p_match=p_pattern.finditer(text)
 
                         pings={}
@@ -1807,7 +1807,6 @@ async def tag(ctx, tag=None, content1=None, *,content2=None):
                             pings[i]=naming(ctx.guild,i.group(1))
                         for i in pings:
                             text=text.replace(i.group(0),f"@{pings[i]}")
-                        
                         return text
 
                     response=await cleaner(ctx,i[1])

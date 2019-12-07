@@ -243,6 +243,8 @@ async def sid(loc):
 
 def naming(guild,id):
     usr= guild.get_member(int(id))
+    if usr is None:
+        return "KF_Unknown"
     return usr.display_name
 
 
@@ -981,7 +983,7 @@ async def owners(ctx,title,new_owner,remove="add"):
         try:
             new_owner_id=ctx.guild.get_member_named(new_owner).id
         except:
-            await ctx.send("I have no idea who you're trying to add. Try using their account name or ID.")
+            await ctx.send("I don't know who you're trying to add. Try using their account name or ID.")
             return
     with open(f"bm.yaml",mode="r") as f:
         bm_feed=yaml.load(f)
@@ -1796,7 +1798,7 @@ async def tag(ctx, tag=None, content1=None, *,content2=None):
             for i in tags:
                 if i[0]==tag.casefold():
 
-                    async def cleaner(ctx,text):
+                    async def cleaner(ctx,text): #removes usermentions and replaces them with @display_name
                         p_pattern=re.compile("<@!(\d*)>")
                         p_match=p_pattern.finditer(text)
                         print(p_match) #iterator
@@ -1812,7 +1814,7 @@ async def tag(ctx, tag=None, content1=None, *,content2=None):
                         for i in pings:
                             text=text.replace(i.group(0),f"@{pings[i]}")
                         return text
-                    
+
                     response=await cleaner(ctx,i[1])
                     await ctx.send(response)
         else:
@@ -2036,7 +2038,7 @@ async def kick(ctx,*user):
     #id
     usr=None
     try:
-        usr = ctx.guild.get_member(usr_int)
+        usr = ctx.guild.get_member(user)
     except:
         pass
 

@@ -29,7 +29,7 @@ from pytz import timezone
 from ruamel.yaml import YAML
 from operator import itemgetter
 
-version = "0.2.1c Newmap1"
+version = "0.2.1d"
 ###useful resources
 #for colours
 #www.htmlcsscolor.com/hex
@@ -1801,18 +1801,13 @@ async def tag(ctx, tag=None, content1=None, *,content2=None):
                     async def cleaner(ctx,text): #removes usermentions and replaces them with @display_name
                         p_pattern=re.compile("<@!(\d*)>")
                         p_match=p_pattern.finditer(text)
-                        print(p_match) #iterator
+
                         pings={}
                         for i in p_match:
-                            print(i) #match obj
-                            print(i.groups()) #id
-                            print(i.group(0))
-                            print(i.group(1))
-                            print(f"iterating over {i}")
                             pings[i]=naming(ctx.guild,i.group(1))
-                        print(pings)
                         for i in pings:
                             text=text.replace(i.group(0),f"@{pings[i]}")
+                        
                         return text
 
                     response=await cleaner(ctx,i[1])

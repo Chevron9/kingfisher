@@ -42,8 +42,9 @@ version = "0.2.1c Newmap1"
 
 #gh stuff
 gh_factions = {"warmongers":ImageColor.getrgb("#ff69b4"),"kami":(173, 20, 87),"watch":ImageColor.getrgb("#607fac"),"cadets":ImageColor.getrgb("#6d8a3c"),
-               "outcasts":ImageColor.getrgb("#7954a8"),"empire":ImageColor.getrgb("#f05e1b"),"labyrinth":ImageColor.getrgb("#bff360"),
+               "polaris":ImageColor.getrgb("#7954a8"),"empire":ImageColor.getrgb("#f05e1b"),"labyrinth":ImageColor.getrgb("#bff360"),
                "phalanx":ImageColor.getrgb("#ffcc00"),"evil":(173, 20, 87),"legion":ImageColor.getrgb("#3498db"),"ghpd":ImageColor.getrgb("#b8d6e7"),
+               "vanguard":ImageColor.getrgb("#2ec870"),
                "neutral":(255,255,255), "independent":(163, 145, 108)}
 #"x":ImageColor.getrgb("x"),
 #
@@ -53,7 +54,7 @@ gh_factions = {"warmongers":ImageColor.getrgb("#ff69b4"),"kami":(173, 20, 87),"w
 #"prosperity":ImageColor.getrgb("#d4af37") "safeguard":ImageColor.getrgb("#8f34e2")
 #"warmongers":ImageColor.getrgb("#f18f22"),"haven":ImageColor.getrgb("#a26cfc"),"union":ImageColor.getrgb("#c40000"),"stronghold":ImageColor.getrgb("#7498b4") ,
 #"avalon":(173, 20, 87),"uplift":(26, 151, 73), "veil":ImageColor.getrgb("#3498db"),"royals":ImageColor.getrgb("#ff69b4"),
-#"crew":ImageColor.getrgb("#c9781e"),"utopia":ImageColor.getrgb("#c72727"),lambs":ImageColor.getrgb("#178080"),"vanguard":ImageColor.getrgb("#2ec870"),
+#"crew":ImageColor.getrgb("#c9781e"),"utopia":ImageColor.getrgb("#c72727"),lambs":ImageColor.getrgb("#178080"),
 #"lost":ImageColor.getrgb("#ffb293"),"convocation":ImageColor.getrgb("#8949ca"),
 
 # discord default colours: https://www.reddit.com/r/discordapp/comments/849bxc/what_are_the_hex_values_of_all_the_default_role/dvo5k3g/
@@ -240,8 +241,8 @@ async def sid(loc):
     return sid
 
 
-async def naming(guild,id):
-    usr= await guild.fetch_member(id)
+def naming(guild,id):
+    usr= guild.get_member(int(id))
     return usr.display_name
 
 
@@ -1794,7 +1795,26 @@ async def tag(ctx, tag=None, content1=None, *,content2=None):
         elif any(e[0] == tag.casefold() for e in tags):
             for i in tags:
                 if i[0]==tag.casefold():
-                    await ctx.send(i[1])
+
+                    async def cleaner(ctx,text):
+                        p_pattern=re.compile("<@!(\d*)>")
+                        p_match=p_pattern.finditer(text)
+                        print(p_match) #iterator
+                        pings={}
+                        for i in p_match:
+                            print(i) #match obj
+                            print(i.groups()) #id
+                            print(i.group(0))
+                            print(i.group(1))
+                            print(f"iterating over {i}")
+                            pings[i]=naming(ctx.guild,i.group(1))
+                        print(pings)
+                        for i in pings:
+                            text=text.replace(i.group(0),f"@{pings[i]}")
+                        return text
+                    
+                    response=await cleaner(ctx,i[1])
+                    await ctx.send(response)
         else:
             if not (await ctx.invoke(wound,severity=str(tag))):
                 await ctx.message.add_reaction("❌")
@@ -1953,7 +1973,7 @@ async def show(ctx,init="False"):
         init_str=[f"Init so far:"+os.linesep]
         for i in init_list:
             try:
-                usr= await ctx.guild.fetch_member(i[1][0])
+                usr= ctx.guild.get_member(i[1][0])
             except:
                 usr=i[1][0]
             #print(type(usr))
@@ -1971,7 +1991,7 @@ async def show(ctx,init="False"):
         order_str=[f"Current Init order in {ctx.message.channel.name}"+os.linesep]
         for i in order_list:
             try:
-                usr= await ctx.guild.fetch_member(i[1][0])
+                usr= ctx.guild.get_member(i[1][0])
             except:
                 usr=i[1][0]
             if isinstance(usr, discord.member.Member):
@@ -2016,7 +2036,6 @@ async def kick(ctx,*user):
     #id
     usr=None
     try:
-        usr_int=int(user)
         usr = ctx.guild.get_member(usr_int)
     except:
         pass

@@ -248,6 +248,17 @@ def naming(guild,id):
     return usr.display_name
 
 
+def cleaner(ctx,text): #removes usermentions and replaces them with @display_name
+    p_pattern=re.compile("<@!*(\d*)>")
+    p_match=p_pattern.finditer(text)
+    pings={}
+    for i in p_match:
+        pings[i]=naming(ctx.guild,i.group(1))
+    for i in pings:
+        text=text.replace(i.group(0),f"@{pings[i]}")
+    return text
+
+
 #Deals with special wounds that require more interaction. Most commonly used to roll the effects chains for critical wounds.
 specWounds=("Demolished","Cremated","Disintegrated (shock)","Iced Over","Whited Out","Devastated","Annihilated","Spreading","Infused")
 
@@ -482,7 +493,9 @@ async def remind(ctx,time,*message):
             time=int(i[:-1])*60*60*24
             timer=timer+time
     await ctx.message.add_reaction('\N{Timer Clock}')
-    content=f"{ctx.message.author.mention}: {' '.join(message)}"
+    message=' '.join(message)
+    message=cleaner(ctx,message)
+    content=f"{ctx.message.author.mention}: {message}"
     sPlanner.enter(timer, 10, asyncio.run_coroutine_threadsafe, argument=(ctx.message.channel.send(content,),loop,), kwargs={})
 
 
@@ -1797,19 +1810,7 @@ async def tag(ctx, tag=None, content1=None, *,content2=None):
         elif any(e[0] == tag.casefold() for e in tags):
             for i in tags:
                 if i[0]==tag.casefold():
-
-                    async def cleaner(ctx,text): #removes usermentions and replaces them with @display_name
-                        p_pattern=re.compile("<@!*(\d*)>")
-                        p_match=p_pattern.finditer(text)
-
-                        pings={}
-                        for i in p_match:
-                            pings[i]=naming(ctx.guild,i.group(1))
-                        for i in pings:
-                            text=text.replace(i.group(0),f"@{pings[i]}")
-                        return text
-
-                    response=await cleaner(ctx,i[1])
+                    response=cleaner(ctx,i[1])
                     await ctx.send(response)
         else:
             if not (await ctx.invoke(wound,severity=str(tag))):

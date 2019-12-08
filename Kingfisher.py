@@ -1940,7 +1940,7 @@ async def end(ctx, force=False,invoked=False,): #start=False
             #print(f"round {cur_round} looking for {i[1]}")
 
             if (i[3]==rem_turn) and (i[1]==cur_round):
-                name=await naming(ctx.guild,i[0])
+                name=naming(ctx.guild,i[0])
                 await ctx.send(f"Reminder for {name}: {i[2]}")
                 turn_tracker[chan]["reminder"].remove(i)
 

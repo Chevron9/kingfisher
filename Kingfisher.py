@@ -1518,6 +1518,13 @@ async def show(ctx,title=None,user=None):
     return
 
 
+@bot.command(description="See >tag roll for help",aliases=["nr"])
+async def newroll(ctx,):
+    d20=random.randint(1,20)
+    d6=random.randint(1,6)
+    await ctx.send(f"{d20}+{d6}={d20+d6}")
+
+
 #dice rolling.
 @bot.command(description="See >tag roll for help",aliases=["r"])
 async def roll(ctx,formula="default",*comment):

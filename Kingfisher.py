@@ -36,6 +36,7 @@ version = "0.2.1d"
 
 
 #TODO: add https://cdn.discordapp.com/attachments/476482380123602946/561997332212875266/lbj5xp1y2hp21.png style colour wheel for new role colour suggestions!
+# https://www.canva.com/colors/color-wheel/
 #TODO: add self tagging
 #TODO: ranking rework
 #TODO: add server configuration
@@ -236,6 +237,8 @@ async def sid(loc):
         sid="portland"
     elif loc==636431438916616192:
         sid="deathland"
+    elif loc==656862194918490112:
+        sid="Benelux"
     else:
         sid="undefined"
     return sid
@@ -1304,7 +1307,7 @@ async def wound(ctx, severity="Moderate", aim="Any", repeats=1,**typus):
         f=0
     elif loc=="detroit":
         f=1 #detroit uses skitterdice
-    elif loc=="la" or loc=="gaming_inc" or loc=="autumn lane" or loc=="portland":
+    elif loc=="la" or loc=="gaming_inc" or loc=="autumn lane" or loc=="portland" or loc=="Benelux":
         f=2
     elif loc=="test":
         f=0

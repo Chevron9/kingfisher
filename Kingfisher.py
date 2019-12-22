@@ -29,7 +29,7 @@ from pytz import timezone
 from ruamel.yaml import YAML
 from operator import itemgetter
 
-version = "0.2.1d"
+version = "0.2.2 faction commands"
 ###useful resources
 #for colours
 #www.htmlcsscolor.com/hex
@@ -1109,6 +1109,42 @@ async def calc(ctx,formula):
     await ctx.send(f"`{formula}`= {eval(formula)}") #using eval is quite unsafe
 
 
+#gh_factions
+@bot.group(description="",aliases=[])
+async def faction(ctx):
+    global gh_factions
+    if ctx.message.author.id not in owner:
+        await ctx.send(f"Bzzt! Not authorized.")
+        return
+    if ctx.invoked_subcommand is None:
+        with open(f"gh_factions.yaml",mode="r+") as f:
+            gh_factions=yaml.load(f)
+            gh_factions=dict(gh_factions) #YAML can't handle tuples, so we have convert back
+            for k in gh_factions:
+                gh_factions[k]=tuple(gh_factions[k])
+        print(gh_factions)
+
+
+@faction.command(description="",aliases=[])
+async def check(ctx):
+    print(gh_factions)
+
+
+@faction.command(description="", aliases=[],hidden=True)
+async def add(ctx,name,color):
+    global gh_factions
+    for k in gh_factions:
+        if k==name:
+            await ctx.send(f"Name already taken!")
+            return
+    gh_factions[name]=ImageColor.getrgb(color)
+    print(gh_factions)
+    with open(f"gh_factions.yaml",mode="w+") as f:
+        f.seek(0)
+        yaml.dump(gh_factions,f)
+    await ctx.send(f"Successfully added **{name}** to faction list.")
+
+
 @bot.command(name="time",description="Stuck in bubble hell? Wonder when giao will be back?")
 async def _time(ctx,):
     utc=datetime.datetime.now(tz=pytz.utc)
@@ -1674,7 +1710,10 @@ async def roll(ctx,formula="default",*comment):
         result_i= [int(i) for i in result]
 
         if keep is True:
-            highest=max(result_i)
+            if "p" in formula:
+                highest=min(result_i)
+            else:
+                highest=max(result_i)
         else:
             highest=sum(result)
         #print(keep)

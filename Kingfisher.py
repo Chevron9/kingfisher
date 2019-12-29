@@ -137,7 +137,7 @@ sPlanner = sched.scheduler(time.time, time.sleep) # class sched.scheduler(timefu
 macros={}
 
 # Here you can modify the bot's prefix and description and whether it sends help in direct messages or not.
-bot = Bot(description=f"Thinkerbot version {version}", command_prefix=(">","<",";"), pm_help=False, case_insensitive=True,owner_id=138340069311381505)
+bot = Bot(description=f"Thinkerbot version {version}", command_prefix=(">",";"), pm_help=False, case_insensitive=True,owner_id=138340069311381505)
 
 
 # This is what happens every time the bot launches. In this case, it prints information like server count, user count the bot is connected to, and the bot id in the console.
@@ -2566,7 +2566,7 @@ async def account_decay():
                 print(f"decay{loc}.txt checked and exists")
                 with open(f"decay{loc}.txt",mode="r+") as f:
                     last_updated = json.load(f)
-                    if last_updated[0]-time.time()<-60*60*24:
+                    if last_updated[0]-time.time()<-60*60*24: #runs every day
                         print("decaying...")
                         if os.path.isfile(f"cash{loc}.txt"):
                             print("file exists")

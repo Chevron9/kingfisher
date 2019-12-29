@@ -29,7 +29,7 @@ from pytz import timezone
 from ruamel.yaml import YAML
 from operator import itemgetter
 
-version = "0.2.2 faction commands"
+version = "0.2.2a FacAdd logger"
 ###useful resources
 #for colours
 #www.htmlcsscolor.com/hex
@@ -88,12 +88,13 @@ clientloop = asyncio.new_event_loop()
 asyncio.set_event_loop(clientloop)
 owner = [138340069311381505]  # hyper#4131
 
-logging.basicConfig(level=logging.INFO)
-# logger = logging.getLogger('discord')
-# logger.setLevel(logging.DEBUG)
-# handler = logging.FileHandler(filename=f'discord.log', encoding='utf-8', mode='a')
-# handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-# logger.addHandler(handler)2
+stdlogger= logging.basicConfig(level=logging.INFO)
+
+logger = logging.getLogger('discord')
+logger.setLevel(logging.INFO)
+handler = logging.FileHandler(filename=f'discord.log', encoding='utf-8', mode='a')
+handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+logger.addHandler(handler)
 
 # pylint suppressions
 # pylint: disable=E0102, W1401
@@ -1132,6 +1133,9 @@ async def check(ctx):
 
 @faction.command(description="", aliases=[],hidden=True)
 async def add(ctx,name,color):
+    if ctx.message.author.id not in owner:
+        await ctx.send(f"Bzzt! Not authorized.")
+        return
     global gh_factions
     for k in gh_factions:
         if k==name:

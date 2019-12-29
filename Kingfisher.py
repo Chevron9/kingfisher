@@ -2003,7 +2003,7 @@ async def end(ctx, force=False,invoked=False,): #start=False
 async def show(ctx,init="False"):
     chan=ctx.channel.id
 
-    #print(turn_tracker[chan])
+    print(turn_tracker[chan])
     init_list=[]
     init_str=""
 
@@ -2061,20 +2061,15 @@ async def kick(ctx,*user):
         cur_turn=turn_tracker[chan]["turn"]
         for i in turn_tracker[chan]["order"]:
             if turn_tracker[chan]['order'][cur_turn-1][0]==i[0]:
+                usr=ctx.guild.get_member(i[0])
+                try:
+                    await ctx.send(f"<@!{usr.id}> has been removed on Turn {turn_tracker[chan]['turn']}, Round {turn_tracker[chan]['round']}")
+                except AttributeError:
+                    await ctx.send(f"<@!{i[0]}> has been removed on Turn {turn_tracker[chan]['turn']}, Round {turn_tracker[chan]['round']}")
                 turn_tracker[chan]["order"].remove(i)
                 await ctx.message.add_reaction("✅")
                 turn_tracker[chan]["turn"]-=1
                 await ctx.invoke(end,"True",True)
-                # making sure the turns move on correctly
-                # if turn_tracker[chan]["turn"]>=len(turn_tracker[chan]["order"]):
-                #     turn_tracker[chan].update({"round":cur_round+1})
-                #     await ctx.send(f"Round {turn_tracker[chan]['round']} begins.")
-                #     turn_tracker[chan].update({"turn":0})
-                #     cur_turn=turn_tracker[chan]["turn"]
-
-                # await ctx.send(f"Turn {turn_tracker[chan]['round']} for <@!{turn_tracker[chan]['order'][cur_turn][0]}>")
-                # turn_tracker[chan].update({"turn":cur_turn+1})
-
                 return
 
     user=" ".join(user)
@@ -2102,6 +2097,7 @@ async def kick(ctx,*user):
             turn_tracker[chan]["order"].remove(i)
             turn_tracker[chan]["turn"]-=1
             await ctx.send(f"<@!{usr.id}> has been removed on Turn {turn_tracker[chan]['turn']}, Round {turn_tracker[chan]['round']}")
+            await ctx.invoke(end,"True",True)
             return
 
 

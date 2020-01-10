@@ -89,10 +89,10 @@ asyncio.set_event_loop(clientloop)
 owner = [138340069311381505]  # hyper#4131
 
 stdlogger= logging.basicConfig(level=logging.INFO)
-
+#https://github.com/Rapptz/discord.py/search?q=on_command_error&unscoped_q=on_command_error
 logger = logging.getLogger('discord')
 logger.setLevel(logging.INFO)
-handler = logging.FileHandler(filename=f'discord.log', encoding='utf-8', mode='a')
+handler = logging.FileHandler(filename=f'discordTEST.log', encoding='utf-8', mode='a')
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
 
@@ -267,20 +267,24 @@ def cleaner(ctx,text): #removes usermentions and replaces them with @display_nam
 specWounds=("Demolished","Cremated","Disintegrated (shock)","Iced Over","Whited Out","Devastated","Annihilated","Spreading","Infused")
 
 
-async def specialWounds(bot,ctx,case,f):
+async def specialWounds(bot,ctx,case,f,aim):
+    #f distinguishes which system is used
     ctx.invoked_with="wound"
     if case=="Demolished":
         bashes=[]
-        limb=random.choice(["Arm","Legs","Head"])
+        if aim=="Any":
+            limb=random.choice(["Arm","Legs","Head"])
+        else:
+            limb=aim
         for i in feed[f]:
             if i[0]=="Bash":
                 if i[1]=="Moderate":
-                    if i[2]==limb:
+                    if i[2].casefold()==limb.casefold():
                         bashes.append(i)
             embed = discord.Embed(title="__**Effect**__",colour=discord.Colour(typ_colours["Bash"]))
             embed.set_footer(text=f"Rolled for {ctx.message.author.name} | {case}",icon_url=ctx.message.author.avatar_url)
             for i in bashes:
-                embed.add_field(name=i[3], value=f"{i[4]}\n*Location: {i[2]}, Stage: {i[1]}*")
+                embed.add_field(name=f"**{i[3]}**", value=f"{i[4]}\n*Location: {i[2]}, Stage: {i[1]}*")
         await ctx.message.channel.send(embed=embed)
     elif (case=="Cremated") or (case=="Whited Out") or (case=="Disintegrated (shock)"):
         if case=="Cremated":
@@ -1111,7 +1115,7 @@ async def calc(ctx,formula):
 
 
 #gh_factions
-@bot.group(description="",aliases=[])
+@bot.group(description="Add factions to the list of factions available to mapClaim",aliases=[])
 async def faction(ctx):
     global gh_factions
     if ctx.message.author.id not in owner:
@@ -1131,7 +1135,7 @@ async def check(ctx):
     print(gh_factions)
 
 
-@faction.command(description="", aliases=[],hidden=True)
+@faction.command(description="colour should be in discord (hex) format", aliases=[],hidden=True)
 async def add(ctx,name,color):
     if ctx.message.author.id not in owner:
         await ctx.send(f"Bzzt! Not authorized.")
@@ -1141,7 +1145,7 @@ async def add(ctx,name,color):
         if k==name:
             await ctx.send(f"Name already taken!")
             return
-    gh_factions[name]=ImageColor.getrgb(color)
+    gh_factions[name.casefold()]=ImageColor.getrgb(color)
     print(gh_factions)
     with open(f"gh_factions.yaml",mode="w+") as f:
         f.seek(0)
@@ -1337,7 +1341,7 @@ async def toggle(ctx, req_role="Active"):
 
 
 #Rolls wounds off of the Weaverdice wound table.
-@bot.command(aliases=["bash","pierce","cut","freeze","shock","rend","burn", "poison","armor","engine","wheel","system","structural"],
+@bot.command(aliases=["bash","pierce","cut","freeze","shock","rend","burn", "poison"],
              description="You like hurting people, huh? Use this to roll your wound effect. >Damage_Type Severity [Aim] [Number]"
              " Use >wound 'Hit Vitals' to find specific wounds.")
 async def wound(ctx, severity="Moderate", aim="Any", repeats=1,**typus):
@@ -1384,16 +1388,6 @@ async def wound(ctx, severity="Moderate", aim="Any", repeats=1,**typus):
 
     elif ctx.invoked_with.casefold() == "Poison".casefold():
         typ="Poison"
-    elif ctx.invoked_with.casefold() == "armor".casefold():
-        typ="Armor"
-    elif ctx.invoked_with.casefold() == "engine".casefold():
-        typ="Engine"
-    elif ctx.invoked_with.casefold() == "wheel".casefold():
-        typ="Wheel"
-    elif ctx.invoked_with.casefold() == "system".casefold():
-        typ="System"
-    elif ctx.invoked_with.casefold() == "structural".casefold():
-        typ="Structural"
 
     if "typus" in typus: #kwarg
         typ=typus['typus']
@@ -1471,11 +1465,11 @@ async def wound(ctx, severity="Moderate", aim="Any", repeats=1,**typus):
         for _ in range(0,repeatlist[j]):
             luck=random.randint(0,len(typlist)-1)
             damages.append(typlist[luck])
-            embed.add_field(name=typlist[luck][3], value=f"{typlist[luck][4]}\n*Location: {typlist[luck][2]}, Stage: {typlist[luck][1]}*", inline=False)
+            embed.add_field(name=f"**{typlist[luck][3]}**", value=f"{typlist[luck][4]}\n*Location: {typlist[luck][2]}, Stage: {typlist[luck][1]}*", inline=False)
         await ctx.send(embed=embed)
         for i in damages:
             if i[3] in specWounds:
-                await specialWounds(bot,ctx,i[3],f)
+                await specialWounds(bot,ctx,i[3],f,aimt)
             #embed.add_field(name="Severity", value=severity, inline=True)
             #embed.add_field(name="Aim", value=aim, inline=True)
     return True

@@ -880,7 +880,7 @@ async def worm(ctx,*args):
 @bot.command(description="Repeats famous catchphrases.")
 async def lysa(ctx):
     sweat_emoji = discord.utils.get(bot.emojis, name='sweats')
-    phraselist = ["oof", "Uh", "Wew", "Weary", "sweats", "Rip", "nice", "Unfortunate", sweat_emoji, "listen\nit's fine"]
+    phraselist = ["oof", "Uh", "Wew", "Weary", "sweats", "Rip", "nice", "Unfortunate", sweat_emoji, "listen\nit's fine", "paps"]
     await ctx.send(random.choice(phraselist))
 
 
@@ -2107,7 +2107,7 @@ async def clear(ctx,):
     global turn_tracker
     if chan in turn_tracker:
         del turn_tracker[chan]
-        await ctx.send("gg")
+        await ctx.send(random.choice(["GG!","Well played!","It's over, I have the high ground!","Commencing fightspam.","Battle is joined.","1v1 me bro","Good luck!"]))
     else:
         await ctx.message.add_reaction("\U00002b50")
 

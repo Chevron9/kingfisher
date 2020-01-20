@@ -2105,8 +2105,11 @@ async def kick(ctx,*user):
 async def clear(ctx,):
     chan=ctx.channel.id
     global turn_tracker
-    del turn_tracker[chan]
-    await ctx.send("gg")
+    if chan in turn_tracker:
+        del turn_tracker[chan]
+        await ctx.send("gg")
+    else:
+        await ctx.message.add_reaction("\U00002b50")
 
 
 @bot.command(description="You can set reminders (e.g. willpowered wounds returning in 2 rounds) by using >turn 2 wp expires.")
@@ -2483,6 +2486,7 @@ async def send(ctx,cape,target, amount):
     with open(f"cash{loc}.txt") as f:
         accounts = json.load(f)
     c1=False
+    c2=False
     for i in accounts:
         if i[0]==cape.casefold():
             c1=i

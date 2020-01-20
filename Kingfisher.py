@@ -375,6 +375,8 @@ async def on_message(message):
         #test-beta 538633337191923714
         #test-dev 435874236297379861
         if not_me(message):
+            #declare-public
+            #TODO: change this to embeds!
             if message.channel.id==587718887936753710:
                 target=discord.utils.find(lambda m:m.id==587718930483773509,message.guild.channels)
                 await target.send(f"**{message.content}** sent by {message.author.name}, ID `{message.author.id}` at {message.created_at}")
@@ -739,7 +741,7 @@ async def perk(ctx, category=None):
     p_match=p_pattern.search(perksfeed[out][typus])
 
     #dealing with banned perks
-    bannedperks=["alumnor", "excessus", "champion", "carnificina", "swellingpower", "evolution","Powersuffers,rawpowerisdecreased","counter","hardceiling","deadshard","finemmane"]
+    bannedperks=[]
     while p_match.group()[:-1].casefold().replace(" ","") in bannedperks:
         print(f"banned perk rolled: {p_match.group()[:-1]}")
         out=random.randint(1,len(perksfeed)-3)

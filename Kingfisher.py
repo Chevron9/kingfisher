@@ -483,30 +483,37 @@ async def emojiwatch(ctx,id):
 #TODO: Conserve over restarts
 #TODO: ping all people who reacted the the reminder
 @bot.command(description="Reminds you of shit. Time should be specified as 13s37m42h12d leaving away time steps as desired.", aliases=["rem"])
-async def remind(ctx,time,*message):
+async def remind(ctx,times,*message):
     loop = asyncio.get_event_loop()
     timer=0
     chunk=re.compile("\d+[shmd]*")
-    chunks=chunk.findall(time)
+    chunks=chunk.findall(times)
     #print(chunks)
     for i in chunks:
         if "s" in i:
-            time=int(i[:-1])
-            timer=timer+time
+            times=int(i[:-1])
+            timer=timer+times
         if "m" in i:
-            time=int(i[:-1])*60
-            timer=timer+time
+            times=int(i[:-1])*60
+            timer=timer+times
         if "h" in i:
-            time=int(i[:-1])*60*60
-            timer=timer+time
+            times=int(i[:-1])*60*60
+            timer=timer+times
         if "d" in i:
-            time=int(i[:-1])*60*60*24
-            timer=timer+time
+            times=int(i[:-1])*60*60*24
+            timer=timer+times
     await ctx.message.add_reaction('\N{Timer Clock}')
     message=' '.join(message)
     message=cleaner(ctx,message)
     content=f"{ctx.message.author.mention}: {message}"
     sPlanner.enter(timer, 10, asyncio.run_coroutine_threadsafe, argument=(ctx.message.channel.send(content,),loop,), kwargs={})
+
+    embed = discord.Embed(colour=discord.Colour(0xf1e5d6), description=message, timestamp=datetime.datetime.utcfromtimestamp(time.time()-timer))
+    embed.set_author(name=ctx.message.author,icon_url=ctx.message.author.avatar_url)
+    await ctx.send(content="@nerds", embed=embed)
+    print(sPlanner.queue)
+
+
 
 
 @bot.command(description="Shuts the bot down. Owner only.",hidden=True)
@@ -831,12 +838,8 @@ async def trigger(ctx, id=None):
 
 @bot.command(description="Posts the google sheet document we use for our battle maps.", name="map", aliases=["maps"])
 async def _map(ctx):
-    playmap="https://docs.google.com/spreadsheets/d/1sqorjpTOAHHON_jPipwyGDHYPEEfGR2hPTbpETSUfys/edit"
     playmap_gh="https://docs.google.com/spreadsheets/d/1lPJuANN3ZX2PPSHWHGlPVUkQqexP7YUtkBvLm1YlBPo/edit#gid=0"
-    if ctx.message.guild.id==465651565089259521:
-        await ctx.send(playmap_gh)
-    else:
-        await ctx.send(playmap)
+    await ctx.send(playmap_gh)
 
 
 @bot.command(description="Use this command to claim squares on the map. Faction name needs to be spelled right. Use >claim to see the current map. Use >claim factions to see available factions")

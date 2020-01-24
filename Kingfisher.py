@@ -7,6 +7,7 @@ import logging
 import math
 import operator
 import os
+import pickle
 import platform
 import random
 import re
@@ -29,60 +30,12 @@ from pytz import timezone
 from ruamel.yaml import YAML
 from operator import itemgetter
 
-version = "0.2.2a FacAdd logger"
-###useful resources
-#for colours
-#www.htmlcsscolor.com/hex
+version = "0.2.3 Reminders v2 "
 
-
-#TODO: add https://cdn.discordapp.com/attachments/476482380123602946/561997332212875266/lbj5xp1y2hp21.png style colour wheel for new role colour suggestions!
-# https://www.canva.com/colors/color-wheel/
-#TODO: add self tagging
+#TODO: add self-tagging, servers
 #TODO: ranking rework
 #TODO: add server configuration
-
-#gh stuff
-gh_factions = {"warmongers":ImageColor.getrgb("#ff69b4"),"kami":(173, 20, 87),"watch":ImageColor.getrgb("#607fac"),"cadets":ImageColor.getrgb("#6d8a3c"),
-               "polaris":ImageColor.getrgb("#7954a8"),"empire":ImageColor.getrgb("#f05e1b"),"labyrinth":ImageColor.getrgb("#bff360"),
-               "phalanx":ImageColor.getrgb("#ffcc00"),"evil":(173, 20, 87),"legion":ImageColor.getrgb("#3498db"),"ghpd":ImageColor.getrgb("#b8d6e7"),
-               "arboretum":ImageColor.getrgb("#2ec870"),
-               "neutral":(255,255,255), "independent":(163, 145, 108)}
-#"x":ImageColor.getrgb("x"),
-#
-#old factions: "division":(76, 140, 255), "prestige":(179, 86, 243), "daybreak":(236,42,18), "elite":(241, 196, 15),
-#"demons":ImageColor.getrgb("#ff7a00"),"valhalla":(241, 196, 15),
-#"court":(101, 111, 255),"dominion":(192, 49, 53),"children":(155, 89, 182),"fixers":ImageColor.getrgb("#f8e900"),
-#"prosperity":ImageColor.getrgb("#d4af37") "safeguard":ImageColor.getrgb("#8f34e2")
-#"warmongers":ImageColor.getrgb("#f18f22"),"haven":ImageColor.getrgb("#a26cfc"),"union":ImageColor.getrgb("#c40000"),"stronghold":ImageColor.getrgb("#7498b4") ,
-#"avalon":(173, 20, 87),"uplift":(26, 151, 73), "veil":ImageColor.getrgb("#3498db"),"royals":ImageColor.getrgb("#ff69b4"),
-#"crew":ImageColor.getrgb("#c9781e"),"utopia":ImageColor.getrgb("#c72727"),lambs":ImageColor.getrgb("#178080"),
-#"lost":ImageColor.getrgb("#ffb293"),"convocation":ImageColor.getrgb("#8949ca"),
-
-# discord default colours: https://www.reddit.com/r/discordapp/comments/849bxc/what_are_the_hex_values_of_all_the_default_role/dvo5k3g/
-
-#old_gh_areas = [(100,122),(132.67,120),(192,118.6666667),(234.6666667,140.6666667),(268.6666667,165.3333333),(313.3333333,129.3333333),(372.6666667,126),(429.3333333,60),
-#                (473.3333333,20),(458.6666667,81.33333333),(498.6666667,53.33333333),(477.3333333,130),(482,162.6666667),(492,217.3333333),(415.3333333,207.3333333),(369.3333333,192),
-#                (293.3333333,194.6666667),(226.6666667,203.3333333),(166.6666667,184),(150.6666667,229.3333333),(113.3333333,224.6666667),(114,283.3333333),(181.3333333,234),
-#                (215.3333333,228.6666667),(262.6666667,238),(223.3333333,286),(379.3333333,230.6666667),(440.6666667,272.6666667),(464.6666667,241.3333333),(498,291.3333333),(490,320),
-#                (410,308),(351.3333333,278),(357.3333333,318),(250.6666667,322),(214.6666667,338),(134.6666667,309.3333333),(170.6666667,344.6666667),(166.6666667,378),(166,428),
-#                (239.3333333,392),(244.6666667,428),(278,376.6666667),(318,387.3333333),(316.6666667,433.3333333),(393.3333333,352.6666667),(359.3333333,412.6666667),(422.6666667,387.3333333),
-#                (458.6666667,378),(490.6666667,394.6666667),(494,458.6666667),(430.6666667,420.6666667),(439.3333333,459.3333333),(350.6666667,475.3333333),(271.3333333,494),
-#                (229.3333333,499.3333333),(190,484.6666667),(148,460),(174.6666667,509.3333333),(190.6666667,545.3333333),(278,546.6666667),(331.3333333,524),(380,553.3333333),
-#                (422.6666667,525.3333333),(455.3333333,512.6666667),(498,525.3333333)]
-
-gh_areas = [(330.00,352.00),(412.00,226.00),(724.00,224.00),(688.00,350.00),(842.00,386.00),(936.00,212.00),(1164.00,410.00),(1300.00,214.00),(1424.00,160.00),
-            (1524.00,50.00),(1538.00,176.00),(1402.00,328.00),(1520.00,352.00),(1528.00,498.00),(1414.00,476.00),(1098.00,536.00),(858.00,550.00),(690.00,508.00),(464.00,424.00),
-            (494.00,524.00),(358.00,604.00),(376.00,714.00),(486.00,754.00),(686.00,656.00),(718.00,726.00),(640.00,728.00),(972.00,624.00),(1360.00,696.00),(1502.00,676.00),
-            (1610.00,696.00),(1630.00,908.00),(1322.00,796.00),(1090.00,816.00),(828.00,808.00),(734.00,914.00),(750.00,1036.00),
-            (498.00,976.00),(512.00,1082.00),(582.00,1110.00),(412.00,1260.00),(628.00,1302.00),(750.00,1190.00),(876.00,1054.00),(1090.00,1044.00),(1064.00,1174.00),(1202.00,1168.00),
-            (1034.00,1320.00),(1218.00,1402.00),(1312.00,1046.00),(1488.00,1058.00),(1646.00,1326.00),(1456.00,1288.00),(1392.00,1406.00),(1044.00,1428.00),(824.00,1406.00),
-            (576.00,1430.00),(486.00,1512.00),(420.00,1402.00),(426.00,1528.00),(606.00,1652.00),(890.00,1664.00),(1096.00,1646.00),(1260.00,1640.00),(1440.00,1624.50),(1489.50,1438.50),
-            (1608.00,1599.00)]
-
-typ_colours = {"Bash":0x0137f6,"Pierce":0xffa500,"Cut":0xb22649,"Freeze":0x00ecff,"Shock":0xd6ff00,"Rend":0x9937a5,"Burn":0x0fe754, "Poison":0x334403,
-               "Armor":0x565759,"Engine":0x565759,"Wheel":0x565759,"System":0x565759,"Structural":0x565759}
-muted_usr = []
-
+#TODO: migrate to db
 
 clientloop = asyncio.new_event_loop()
 asyncio.set_event_loop(clientloop)
@@ -128,14 +81,41 @@ triggerfeed = triggerSheet.get_all_values()
 pactfeed = RefSheet.worksheet("Pactluck")
 pactfeed = pactfeed.get_all_values()
 
+#Factions
+gh_factions = {"neutral":(255,255,255), "independent":(163, 145, 108)}
+#"x":ImageColor.getrgb("x"),
+# discord default colours: https://www.reddit.com/r/discordapp/comments/849bxc/what_are_the_hex_values_of_all_the_default_role/dvo5k3g/
+
+# with open(f"gh_factions.yaml",mode="r+") as f:
+#     gh_factions=YAML.load(f)
+#     gh_factions=dict(gh_factions) #YAML can't handle tuples, so we have convert back
+#     for k in gh_factions:
+#         gh_factions[k]=tuple(gh_factions[k])
+
 #vials
 VialDoc = gc.open_by_key("1yksmYY7q1GKx4tXVpb7oSxffgEh--hOvXkDwLVgCdlg") # arcan's vial doc
 sheet = VialDoc.worksheet("Full Vials")
 vialfeed = sheet.get_all_values()
 sPlanner = sched.scheduler(time.time, time.sleep) # class sched.scheduler(timefunc=time.monotonic, delayfunc=time.sleep)
 
+#################
 #global variables
+#################
 macros={}
+
+#Map path, used for claim image diting
+gh_areas = [(330.00,352.00),(412.00,226.00),(724.00,224.00),(688.00,350.00),(842.00,386.00),(936.00,212.00),(1164.00,410.00),(1300.00,214.00),(1424.00,160.00),
+            (1524.00,50.00),(1538.00,176.00),(1402.00,328.00),(1520.00,352.00),(1528.00,498.00),(1414.00,476.00),(1098.00,536.00),(858.00,550.00),(690.00,508.00),(464.00,424.00),
+            (494.00,524.00),(358.00,604.00),(376.00,714.00),(486.00,754.00),(686.00,656.00),(718.00,726.00),(640.00,728.00),(972.00,624.00),(1360.00,696.00),(1502.00,676.00),
+            (1610.00,696.00),(1630.00,908.00),(1322.00,796.00),(1090.00,816.00),(828.00,808.00),(734.00,914.00),(750.00,1036.00),
+            (498.00,976.00),(512.00,1082.00),(582.00,1110.00),(412.00,1260.00),(628.00,1302.00),(750.00,1190.00),(876.00,1054.00),(1090.00,1044.00),(1064.00,1174.00),(1202.00,1168.00),
+            (1034.00,1320.00),(1218.00,1402.00),(1312.00,1046.00),(1488.00,1058.00),(1646.00,1326.00),(1456.00,1288.00),(1392.00,1406.00),(1044.00,1428.00),(824.00,1406.00),
+            (576.00,1430.00),(486.00,1512.00),(420.00,1402.00),(426.00,1528.00),(606.00,1652.00),(890.00,1664.00),(1096.00,1646.00),(1260.00,1640.00),(1440.00,1624.50),(1489.50,1438.50),
+            (1608.00,1599.00)]
+
+typ_colours = {"Bash":0x0137f6,"Pierce":0xffa500,"Cut":0xb22649,"Freeze":0x00ecff,"Shock":0xd6ff00,"Rend":0x9937a5,"Burn":0x0fe754, "Poison":0x334403,
+               "Armor":0x565759,"Engine":0x565759,"Wheel":0x565759,"System":0x565759,"Structural":0x565759}
+muted_usr = []
 
 # Here you can modify the bot's prefix and description and whether it sends help in direct messages or not.
 bot = Bot(description=f"Thinkerbot version {version}", command_prefix=(">",";"), pm_help=False, case_insensitive=True,owner_id=138340069311381505)
@@ -169,17 +149,26 @@ async def on_ready():
     print('--------')
     print('Ready!')
 
-    #resume scheduled reminders
+    # #resume scheduled reminders
+    # if sPlanner.empty():
+    #     loop = asyncio.get_event_loop()
+    #     with open(f"reminders.txt",mode="r+") as f:
+    #         reminders = json.load(f)
+    #         for i in reminders:
+    #             timer=i['time']
+    #             content=i['content']
+    #             destination=bot.get_channel(i['destination'])
+    #             sPlanner.enterabs(timer, 10, asyncio.run_coroutine_threadsafe, argument=(destination.send(content),loop,), kwargs={})
+    # #end resume
+
     if sPlanner.empty():
         loop = asyncio.get_event_loop()
-        with open(f"reminders.txt",mode="r+") as f:
-            reminders = json.load(f)
+        with open(f"reminders.kf",mode="rb") as f:
+            reminders = pickle.load(f)
+            print(reminders)
             for i in reminders:
-                timer=i['time']
-                content=i['content']
-                destination=bot.get_channel(i['destination'])
-                sPlanner.enterabs(timer, 10, asyncio.run_coroutine_threadsafe, argument=(destination.send(content),loop,), kwargs={})
-        #end resume
+                sPlanner.enterabs(reminders["timer"], 10, asyncio.run_coroutine_threadsafe,
+                                  argument=(reminders["channel"].send(reminders["reactlist"],embed=reminders["embed"]),loop,), kwargs={})
 
 
 ###Functions
@@ -482,7 +471,7 @@ async def emojiwatch(ctx,id):
 
 #TODO: Conserve over restarts
 #TODO: ping all people who reacted the the reminder
-@bot.command(description="Reminds you of shit. Time should be specified as 13s37m42h12d leaving away time steps as desired.", aliases=["rem"])
+@bot.command(description="Reminds you of stuff. Time should be specified as 13s37m42h12d leaving away time steps as desired.", aliases=["rem"])
 async def remind(ctx,times,*message):
     loop = asyncio.get_event_loop()
     timer=0
@@ -505,15 +494,25 @@ async def remind(ctx,times,*message):
     await ctx.message.add_reaction('\N{Timer Clock}')
     message=' '.join(message)
     message=cleaner(ctx,message)
-    content=f"{ctx.message.author.mention}: {message}"
-    sPlanner.enter(timer, 10, asyncio.run_coroutine_threadsafe, argument=(ctx.message.channel.send(content,),loop,), kwargs={})
 
     embed = discord.Embed(colour=discord.Colour(0xf1e5d6), description=message, timestamp=datetime.datetime.utcfromtimestamp(time.time()-timer))
-    embed.set_author(name=ctx.message.author,icon_url=ctx.message.author.avatar_url)
-    await ctx.send(content="@nerds", embed=embed)
-    print(sPlanner.queue)
+    embed.set_author(name=ctx.message.author.display_name,icon_url=ctx.message.author.avatar_url)
+    reactlist="@nerds"
 
+    sPlanner.enter(timer, 10, asyncio.run_coroutine_threadsafe, argument=(ctx.message.channel.send(reactlist,embed=embed),loop,), kwargs={})
+    #add a link to og message
+    #ping everyone who uses the react + author
 
+    with open(f"reminders.kf",mode="rb+") as f:
+        embeds=pickle.load(f)
+        embeds.append({"timer":time.time()+timer,"channel":ctx.message.channel,"reactlist":reactlist,"embed":embed})
+
+        f.seek(0)
+        pickle.dump(embeds,f)
+
+    with open(f"reminders.kf",mode="rb") as f:
+            reminders = pickle.load(f)
+            print(reminders)
 
 
 @bot.command(description="Shuts the bot down. Owner only.",hidden=True)
@@ -527,15 +526,15 @@ async def die(ctx):
     b_task2.cancel()
 
     schedstop.set()
-    reminders=[]
+    #reminders=[]
     #if sPlanner.empty()==False:
-    with open(f"reminders.txt",mode="w+") as f:
-        f.seek(0)
-        f.truncate()
-        queue=sPlanner.queue
-        for i in queue:
-            reminders.append({"time":i[0],'content':i.argument[0].cr_frame.f_locals['content'],'destination':i.argument[0].cr_frame.f_locals['self'].id})
-        json.dump(reminders,f)
+    # with open(f"reminders.txt",mode="w+") as f:
+    #     f.seek(0)
+    #     f.truncate()
+    #     queue=sPlanner.queue
+    #     for i in queue:
+    #         reminders.append({"time":i[0],'content':i.argument[0].cr_frame.f_locals['content'],'destination':i.argument[0].cr_frame.f_locals['self'].id})
+    #     json.dump(reminders,f)
     #print(reminders)
 
     await bot.close()
@@ -611,6 +610,7 @@ async def updateFeed(ctx):
     global perksfeed
     global augfeed
     global triggerfeed
+    global gh_factions
     credentials = ServiceAccountCredentials.from_json_keyfile_name('gspread.json', scope)
     gc = gspread.authorize(credentials)
     RefSheet = gc.open_by_key(reference)
@@ -633,6 +633,11 @@ async def updateFeed(ctx):
     triggerfeed = triggerSheet.get_all_values()
     pactfeed = RefSheet.worksheet("Pactluck")
     pactfeed = pactfeed.get_all_values()
+    with open(f"gh_factions.yaml",mode="r+") as f:
+        gh_factions=yaml.load(f)
+        gh_factions=dict(gh_factions) #YAML can't handle tuples, so we have convert back
+        for k in gh_factions:
+            gh_factions[k]=tuple(gh_factions[k])
     await ctx.message.add_reaction("\U00002714")
 
 
@@ -2540,15 +2545,6 @@ async def income(ctx,cape, amount):
 async def account_decay():
     await asyncio.sleep(60*1) #make sure the bot is initialized - this can be fixed better.
     while True:
-        #trying a dirty fix for the reminders issue.
-        reminders=[]
-        with open(f"reminders.txt",mode="w+") as f:
-            f.seek(0)
-            f.truncate()
-            queue=sPlanner.queue
-            for i in queue:
-                reminders.append({"time":i[0],'content':i.argument[0].cr_frame.f_locals['content'],'destination':i.argument[0].cr_frame.f_locals['self'].id})
-            json.dump(reminders,f)
 
         locs=[465651565089259521,457290411698814980,636431438916616192] #testing 434729592352276480
         #GH_sid 478240151987027978
@@ -2669,6 +2665,21 @@ async def rank_decay():
                 last_updated.append(time.time())
                 json.dump(last_updated,f)
         await asyncio.sleep(60*60*3) # task runs every 3 hours
+
+
+# #Save reminders periodically
+# async def reminder_save():
+#     while True:
+#         #trying a dirty fix for the reminders issue.
+#         reminders=[]
+#         with open(f"reminders.txt",mode="w+") as f:
+#             f.seek(0)
+#             f.truncate()
+#             queue=sPlanner.queue
+#             for i in queue:
+#                 reminders.append({"time":i[0],'content':i.argument[0].cr_frame.f_locals['content'],'destination':i.argument[0].cr_frame.f_locals['self'].id})
+#             json.dump(reminders,f)
+#     await asyncio.sleep(60*60*1) #runs every hour
 
 
 ###Bot runs here

@@ -165,10 +165,16 @@ async def on_ready():
         loop = asyncio.get_event_loop()
         with open(f"reminders.kf",mode="rb") as f:
             reminders = pickle.load(f)
-            print(reminders)
             for i in reminders:
-                sPlanner.enterabs(reminders["timer"], 10, asyncio.run_coroutine_threadsafe,
-                                  argument=(reminders["channel"].send(reminders["reactlist"],embed=reminders["embed"]),loop,), kwargs={})
+                print(i["reactlist"])
+                print(i["embed"].description)
+                channel=bot.get_channel(i["channel"])
+                if time.time()-i["timer"]>60*60*24: #if older than a day, this probably shouldn't be repeated.
+                    continue
+                sPlanner.enterabs(i["timer"], 10, asyncio.run_coroutine_threadsafe,
+                                  argument=(channel.send(i["reactlist"],embed=i["embed"]),loop,), kwargs={})
+    with open(f"reminders.kf",mode="wb+") as f:
+        pickle.dump([],f)
 
 
 ###Functions
@@ -469,8 +475,6 @@ async def emojiwatch(ctx,id):
         print("True!")
 
 
-#TODO: Conserve over restarts
-#TODO: ping all people who reacted the the reminder
 @bot.command(description="Reminds you of stuff. Time should be specified as 13s37m42h12d leaving away time steps as desired.", aliases=["rem"])
 async def remind(ctx,times,*message):
     loop = asyncio.get_event_loop()
@@ -491,21 +495,33 @@ async def remind(ctx,times,*message):
         if "d" in i:
             times=int(i[:-1])*60*60*24
             timer=timer+times
+        #todo: add if no char at all
     await ctx.message.add_reaction('\N{Timer Clock}')
     message=' '.join(message)
     message=cleaner(ctx,message)
 
-    embed = discord.Embed(colour=discord.Colour(0xf1e5d6), description=message, timestamp=datetime.datetime.utcfromtimestamp(time.time()-timer))
+    embed = discord.Embed(colour=discord.Colour(0xf1e5d6),description=f"[Jump]({ctx.message.jump_url}) \n\n{message}", timestamp=datetime.datetime.utcfromtimestamp(time.time()))
     embed.set_author(name=ctx.message.author.display_name,icon_url=ctx.message.author.avatar_url)
-    reactlist="@nerds"
+    reactlist=ctx.message.author.mention
 
-    sPlanner.enter(timer, 10, asyncio.run_coroutine_threadsafe, argument=(ctx.message.channel.send(reactlist,embed=embed),loop,), kwargs={})
-    #add a link to og message
-    #ping everyone who uses the react + author
+    def check(reaction, user):
+        return user != ctx.message.author and str(reaction.emoji) == '\N{Timer Clock}' and user != bot.user
+
+    timer_out=min(60.0,timer)
+    try: #ping everyone that also reacts to our react emoji
+        reaction, user = await bot.wait_for('reaction_add', timeout=timer_out, check=check)
+    except asyncio.TimeoutError:
+        pass
+    else:
+        reactlist=reactlist+f" {user.mention}"
+
+    sPlanner.enter(timer-timer_out, 10, asyncio.run_coroutine_threadsafe, argument=(ctx.message.channel.send(reactlist,embed=embed),loop,), kwargs={})
+    #TODO: Purge reminders.kf after loading from it
+    #TODO: fix weird characters ##I’m free on monday
 
     with open(f"reminders.kf",mode="rb+") as f:
         embeds=pickle.load(f)
-        embeds.append({"timer":time.time()+timer,"channel":ctx.message.channel,"reactlist":reactlist,"embed":embed})
+        embeds.append({"timer":time.time()+timer-timer_out,"channel":ctx.message.channel.id,"reactlist":reactlist,"embed":embed})
 
         f.seek(0)
         pickle.dump(embeds,f)

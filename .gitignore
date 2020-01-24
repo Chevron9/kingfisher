@@ -119,3 +119,5 @@ decay*
 glicko*
 bm.yaml
 .flake8
+pickle_gen.py
+reminders.kf

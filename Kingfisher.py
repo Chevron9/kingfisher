@@ -147,34 +147,23 @@ async def on_ready():
     print('--------')
     print('Current Discord.py Version: {} | Current Python Version: {}'.format(discord.__version__, platform.python_version()))
     print('--------')
-    print('Ready!')
-
-    # #resume scheduled reminders
-    # if sPlanner.empty():
-    #     loop = asyncio.get_event_loop()
-    #     with open(f"reminders.txt",mode="r+") as f:
-    #         reminders = json.load(f)
-    #         for i in reminders:
-    #             timer=i['time']
-    #             content=i['content']
-    #             destination=bot.get_channel(i['destination'])
-    #             sPlanner.enterabs(timer, 10, asyncio.run_coroutine_threadsafe, argument=(destination.send(content),loop,), kwargs={})
-    # #end resume
 
     if sPlanner.empty():
         loop = asyncio.get_event_loop()
         with open(f"reminders.kf",mode="rb") as f:
-            reminders = pickle.load(f)
-            for i in reminders:
-                print(i["reactlist"])
-                print(i["embed"].description)
-                channel=bot.get_channel(i["channel"])
-                if time.time()-i["timer"]>60*60*24: #if older than a day, this probably shouldn't be repeated.
-                    continue
-                sPlanner.enterabs(i["timer"], 10, asyncio.run_coroutine_threadsafe,
-                                  argument=(channel.send(i["reactlist"],embed=i["embed"]),loop,), kwargs={})
+            try:
+                reminders = pickle.load(f)
+            except EOFError:
+                reminders = []
+        for i in reminders:
+            print(i["embed"].description)
+            channel=bot.get_channel(i["channel"])
+            sPlanner.enterabs(i["timer"], 10, asyncio.run_coroutine_threadsafe,
+                              argument=(channel.send(i["reactlist"],embed=i["embed"]),loop,), kwargs={})
     with open(f"reminders.kf",mode="wb+") as f:
         pickle.dump([],f)
+
+    print('Ready!')
 
 
 ###Functions
@@ -238,6 +227,43 @@ async def sid(loc):
     else:
         sid="undefined"
     return sid
+
+
+async def rem_depickle(rem_dict):
+    print("depickling!")
+
+    with open(f"reminders.kf",mode="rb+") as f:
+        reminders = pickle.load(f)
+        print("loaded!")
+        for i in reminders:
+            #rem_dict={"timer":time.time()+timer-timer_out,"channel":ctx.message.channel.id,"reactlist":reactlist,"embed":embed}
+            #embed description timestamp
+            #embed.set_author(name=ctx.message.author.display_name,icon_url=ctx.message.author.avatar_url)
+            if (i["channel"]==rem_dict["channel"] and i["embed"].description==rem_dict["embed"].description and
+                    i["embed"].description==rem_dict["embed"].description and i["embed"].author==rem_dict["embed"].author and
+                    i["embed"].timestamp==rem_dict["embed"].timestamp):
+                reminders.remove(i)
+                print("Removed!")
+            print(i["embed"].description)
+            print(rem_dict["embed"].description)
+            print(i["embed"].description==rem_dict["embed"].description)
+            print("-------")
+
+            #embed proxy ruins this. idea: add custom random number to embed to make sure these are the same!
+            print(i["embed"].author)
+            print(i["embed"].author)
+            print(i["embed"].author==rem_dict["embed"].author)
+            print("-------")
+
+            print(i["embed"].timestamp)
+            print(i["embed"].timestamp)
+            print(i["embed"].timestamp==rem_dict["embed"].timestamp)
+        f.seek(0)
+        print("seeking!")
+        pickle.dump(reminders,f)
+        print("dumped!")
+
+    print("depickle success!")
 
 
 def naming(guild,id):
@@ -515,13 +541,18 @@ async def remind(ctx,times,*message):
     else:
         reactlist=reactlist+f" {user.mention}"
 
+    rem_dict={"timer":time.time()+timer-timer_out,"channel":ctx.message.channel.id,"reactlist":reactlist,"embed":embed}
+
     sPlanner.enter(timer-timer_out, 10, asyncio.run_coroutine_threadsafe, argument=(ctx.message.channel.send(reactlist,embed=embed),loop,), kwargs={})
     #TODO: Purge reminders.kf after loading from it
     #TODO: fix weird characters ##I’m free on monday
 
     with open(f"reminders.kf",mode="rb+") as f:
-        embeds=pickle.load(f)
-        embeds.append({"timer":time.time()+timer-timer_out,"channel":ctx.message.channel.id,"reactlist":reactlist,"embed":embed})
+        try:
+            embeds = pickle.load(f)
+        except EOFError:
+            embeds = []
+        embeds.append(rem_dict)
 
         f.seek(0)
         pickle.dump(embeds,f)
@@ -529,6 +560,8 @@ async def remind(ctx,times,*message):
     with open(f"reminders.kf",mode="rb") as f:
             reminders = pickle.load(f)
             print(reminders)
+
+    sPlanner.enter(timer, 11, asyncio.run_coroutine_threadsafe, argument=(rem_depickle(rem_dict),loop,), kwargs={})
 
 
 @bot.command(description="Shuts the bot down. Owner only.",hidden=True)
@@ -542,16 +575,6 @@ async def die(ctx):
     b_task2.cancel()
 
     schedstop.set()
-    #reminders=[]
-    #if sPlanner.empty()==False:
-    # with open(f"reminders.txt",mode="w+") as f:
-    #     f.seek(0)
-    #     f.truncate()
-    #     queue=sPlanner.queue
-    #     for i in queue:
-    #         reminders.append({"time":i[0],'content':i.argument[0].cr_frame.f_locals['content'],'destination':i.argument[0].cr_frame.f_locals['self'].id})
-    #     json.dump(reminders,f)
-    #print(reminders)
 
     await bot.close()
 
@@ -2681,21 +2704,6 @@ async def rank_decay():
                 last_updated.append(time.time())
                 json.dump(last_updated,f)
         await asyncio.sleep(60*60*3) # task runs every 3 hours
-
-
-# #Save reminders periodically
-# async def reminder_save():
-#     while True:
-#         #trying a dirty fix for the reminders issue.
-#         reminders=[]
-#         with open(f"reminders.txt",mode="w+") as f:
-#             f.seek(0)
-#             f.truncate()
-#             queue=sPlanner.queue
-#             for i in queue:
-#                 reminders.append({"time":i[0],'content':i.argument[0].cr_frame.f_locals['content'],'destination':i.argument[0].cr_frame.f_locals['self'].id})
-#             json.dump(reminders,f)
-#     await asyncio.sleep(60*60*1) #runs every hour
 
 
 ###Bot runs here

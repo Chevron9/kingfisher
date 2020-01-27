@@ -148,6 +148,18 @@ async def on_ready():
     print('Current Discord.py Version: {} | Current Python Version: {}'.format(discord.__version__, platform.python_version()))
     print('--------')
 
+    #resume scheduled reminders
+    if sPlanner.empty():
+        loop = asyncio.get_event_loop()
+        with open(f"reminders.txt",mode="r+") as f:
+            reminders = json.load(f)
+            for i in reminders:
+                timer=i['time']
+                content=i['content']
+                destination=bot.get_channel(i['destination'])
+                sPlanner.enterabs(timer, 10, asyncio.run_coroutine_threadsafe, argument=(destination.send(content),loop,), kwargs={})
+    #end resume
+
     if sPlanner.empty():
         loop = asyncio.get_event_loop()
         with open(f"reminders.kf",mode="rb") as f:

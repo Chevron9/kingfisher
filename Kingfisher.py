@@ -16,6 +16,7 @@ import sys
 import time
 import threading
 import traceback
+import uuid
 
 
 import discord  # the crown jewel
@@ -149,6 +150,8 @@ async def on_ready():
     print('--------')
 
     #resume scheduled reminders
+    ##this is only in for one restart to make sure reminders arent deleted
+    ##need to do something about really far-off reminders at some point
     if sPlanner.empty():
         loop = asyncio.get_event_loop()
         with open(f"reminders.txt",mode="r+") as f:
@@ -168,7 +171,7 @@ async def on_ready():
             except EOFError:
                 reminders = []
         for i in reminders:
-            print(i["embed"].description)
+            #print(i["embed"].description)
             channel=bot.get_channel(i["channel"])
             sPlanner.enterabs(i["timer"], 10, asyncio.run_coroutine_threadsafe,
                               argument=(channel.send(i["reactlist"],embed=i["embed"]),loop,), kwargs={})
@@ -242,40 +245,19 @@ async def sid(loc):
 
 
 async def rem_depickle(rem_dict):
-    print("depickling!")
 
     with open(f"reminders.kf",mode="rb+") as f:
         reminders = pickle.load(f)
-        print("loaded!")
+
         for i in reminders:
-            #rem_dict={"timer":time.time()+timer-timer_out,"channel":ctx.message.channel.id,"reactlist":reactlist,"embed":embed}
-            #embed description timestamp
-            #embed.set_author(name=ctx.message.author.display_name,icon_url=ctx.message.author.avatar_url)
             if (i["channel"]==rem_dict["channel"] and i["embed"].description==rem_dict["embed"].description and
-                    i["embed"].description==rem_dict["embed"].description and i["embed"].author==rem_dict["embed"].author and
-                    i["embed"].timestamp==rem_dict["embed"].timestamp):
+                    i["embed"].description==rem_dict["embed"].description and
+                    i["embed"].timestamp==rem_dict["embed"].timestamp) and i["ID"]==rem_dict["ID"]:
                 reminders.remove(i)
-                print("Removed!")
-            print(i["embed"].description)
-            print(rem_dict["embed"].description)
-            print(i["embed"].description==rem_dict["embed"].description)
-            print("-------")
+                print("depickled")
 
-            #embed proxy ruins this. idea: add custom random number to embed to make sure these are the same!
-            print(i["embed"].author)
-            print(i["embed"].author)
-            print(i["embed"].author==rem_dict["embed"].author)
-            print("-------")
-
-            print(i["embed"].timestamp)
-            print(i["embed"].timestamp)
-            print(i["embed"].timestamp==rem_dict["embed"].timestamp)
         f.seek(0)
-        print("seeking!")
         pickle.dump(reminders,f)
-        print("dumped!")
-
-    print("depickle success!")
 
 
 def naming(guild,id):
@@ -553,7 +535,8 @@ async def remind(ctx,times,*message):
     else:
         reactlist=reactlist+f" {user.mention}"
 
-    rem_dict={"timer":time.time()+timer-timer_out,"channel":ctx.message.channel.id,"reactlist":reactlist,"embed":embed}
+    identifier=uuid.uuid4()
+    rem_dict={"timer":time.time()+timer-timer_out,"channel":ctx.message.channel.id,"reactlist":reactlist,"embed":embed,"ID":identifier}
 
     sPlanner.enter(timer-timer_out, 10, asyncio.run_coroutine_threadsafe, argument=(ctx.message.channel.send(reactlist,embed=embed),loop,), kwargs={})
     #TODO: Purge reminders.kf after loading from it

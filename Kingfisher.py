@@ -2581,13 +2581,11 @@ async def account_decay():
 
         locs=[465651565089259521,457290411698814980] #testing 434729592352276480
         #The servers that money decay and income is enabled for.
-        #Currently Grand Haven and WD LA
+        #Currently Grand Haven 465651565089259521 and WD LA 457290411698814980
 
         decay=0.9**(1/7) #10% decay per week
-        #gh loc=465651565089259521
-        #LA loc = 457290411698814980 435874236297379861
         GH_channel = bot.get_channel(478240151987027978) #GH facacs # channel ID goes here
-        LA_channel = bot.get_channel(457640092240969730) #la battle ooc
+        LA_channel = bot.get_channel(457640092240969730) #la battle-ooc
         #test_channel=bot.get_channel(435874236297379861) #nest test-dev
 
         last_updated=[]
@@ -2600,15 +2598,14 @@ async def account_decay():
                     if last_updated[0]-time.time()<-60*60*24: #runs every day
                         print("decaying...")
                         if os.path.isfile(f"cash{loc}.txt"):
-                            print("file exists")
+                            print("Cash file exists")
                             with open(f"cash{loc}.txt",mode="r+") as g:
-                                print("file opened")
                                 accounts = json.load(g)
                                 g.seek(0)
                                 g.truncate()
                                 wealth=0
                                 for i in accounts:
-                                    if loc==465651565089259521 or loc==434729592352276480 or await sid(loc)=="deathland":
+                                    if loc==465651565089259521 or loc==434729592352276480:
                                         i[1]=round(i[1]*decay)
                                     i[1]=i[1]+round((i[2]/7))
                                     wealth+=i[1]
@@ -2626,7 +2623,6 @@ async def account_decay():
                             #      await test_channel.send(f"Daily Expenses computed. Total accrued wealth: {wealth}$")
                         else:
                             print(f"No accounts on file for {loc}.")
-                            #await test_channel.send("No accounts on file.")
                         f.seek(0)
                         f.truncate()
                         last_updated=[]

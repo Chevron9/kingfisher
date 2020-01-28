@@ -149,20 +149,6 @@ async def on_ready():
     print('Current Discord.py Version: {} | Current Python Version: {}'.format(discord.__version__, platform.python_version()))
     print('--------')
 
-    #resume scheduled reminders
-    ##this is only in for one restart to make sure reminders arent deleted
-    ##need to do something about really far-off reminders at some point
-    if sPlanner.empty():
-        loop = asyncio.get_event_loop()
-        with open(f"reminders.txt",mode="r+") as f:
-            reminders = json.load(f)
-            for i in reminders:
-                timer=i['time']
-                content=i['content']
-                destination=bot.get_channel(i['destination'])
-                sPlanner.enterabs(timer, 10, asyncio.run_coroutine_threadsafe, argument=(destination.send(content),loop,), kwargs={})
-    #end resume
-
     if sPlanner.empty():
         loop = asyncio.get_event_loop()
         with open(f"reminders.kf",mode="rb") as f:
@@ -495,13 +481,13 @@ async def emojiwatch(ctx,id):
         print("True!")
 
 
-@bot.command(description="Reminds you of stuff. Time should be specified as 13s37m42h12d leaving away time steps as desired.", aliases=["rem"])
-async def remind(ctx,times,*message):
+@bot.command(description="Reminds you of stuff. Time should be specified as 13s37m42h12d leaving away time steps as desired.", aliases=["rem"],rest_is_raw=False)
+async def remind(ctx,times,*,message):
     loop = asyncio.get_event_loop()
     timer=0
     chunk=re.compile("\d+[shmd]*")
+    chunkers=["s","h","m","d"]
     chunks=chunk.findall(times)
-    #print(chunks)
     for i in chunks:
         if "s" in i:
             times=int(i[:-1])
@@ -515,9 +501,10 @@ async def remind(ctx,times,*message):
         if "d" in i:
             times=int(i[:-1])*60*60*24
             timer=timer+times
-        #todo: add if no char at all
+        elif not any(x in i for x in chunkers):
+            await ctx.send("You need to specify a time! Time should be specified as 13s37m42h12d leaving away time steps as desired.")
+            return
     await ctx.message.add_reaction('\N{Timer Clock}')
-    message=' '.join(message)
     message=cleaner(ctx,message)
 
     embed = discord.Embed(colour=discord.Colour(0xf1e5d6),description=f"[Jump]({ctx.message.jump_url}) \n\n{message}", timestamp=datetime.datetime.utcfromtimestamp(time.time()))
@@ -539,7 +526,6 @@ async def remind(ctx,times,*message):
     rem_dict={"timer":time.time()+timer-timer_out,"channel":ctx.message.channel.id,"reactlist":reactlist,"embed":embed,"ID":identifier}
 
     sPlanner.enter(timer-timer_out, 10, asyncio.run_coroutine_threadsafe, argument=(ctx.message.channel.send(reactlist,embed=embed),loop,), kwargs={})
-    #TODO: Purge reminders.kf after loading from it
     #TODO: fix weird characters ##I’m free on monday
 
     with open(f"reminders.kf",mode="rb+") as f:
@@ -552,11 +538,7 @@ async def remind(ctx,times,*message):
         f.seek(0)
         pickle.dump(embeds,f)
 
-    with open(f"reminders.kf",mode="rb") as f:
-            reminders = pickle.load(f)
-            print(reminders)
-
-    sPlanner.enter(timer, 11, asyncio.run_coroutine_threadsafe, argument=(rem_depickle(rem_dict),loop,), kwargs={})
+    sPlanner.enter(timer-timer_out+2, 11, asyncio.run_coroutine_threadsafe, argument=(rem_depickle(rem_dict),loop,), kwargs={})
 
 
 @bot.command(description="Shuts the bot down. Owner only.",hidden=True)

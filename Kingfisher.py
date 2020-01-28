@@ -1179,6 +1179,22 @@ async def add(ctx,name,color):
     await ctx.send(f"Successfully added **{name}** to faction list.")
 
 
+@faction.command(description="Removes a faction", aliases=[],hidden=True)
+async def remove(ctx,name):
+    if ctx.message.author.id not in owner:
+        await ctx.send(f"Bzzt! Not authorized.")
+        return
+    global gh_factions
+    for k in gh_factions:
+        if k==name:
+            del gh_factions[k]
+            await ctx.send(f"Removed {k}.")
+    print(gh_factions)
+    with open(f"gh_factions.yaml",mode="w+") as f:
+        f.seek(0)
+        yaml.dump(gh_factions,f)
+
+
 @bot.command(name="time",description="Stuck in bubble hell? Wonder when giao will be back?")
 async def _time(ctx,):
     utc=datetime.datetime.now(tz=pytz.utc)

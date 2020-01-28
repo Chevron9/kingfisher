@@ -240,7 +240,6 @@ async def rem_depickle(rem_dict):
                     i["embed"].description==rem_dict["embed"].description and
                     i["embed"].timestamp==rem_dict["embed"].timestamp) and i["ID"]==rem_dict["ID"]:
                 reminders.remove(i)
-                print("depickled")
 
         f.seek(0)
         pickle.dump(reminders,f)
@@ -335,6 +334,10 @@ def is_me(m):
 
 def not_me(m):
     return m.author != bot.user
+
+
+def owner_only(ctx):
+    return ctx.message.author.id in owner
 
 
 #global check to make sure blocked people can't mess around
@@ -441,19 +444,19 @@ async def order66(ctx):
     await ctx.message.guild.leave()
 
 
-@bot.command(description="Deletes all channels.",hidden=True)
-async def order67(ctx):
-    if ctx.message.author.id not in owner:
-        await ctx.send("😰")
-        return
-    await ctx.send("Oh. You're actually serious about this?")
-    #TODO: add confirmation
-    #chans=ctx.message.guild.channels
-    #for i in chans:
-    #   await i.delete()
+# @bot.command(description="Deletes all channels.",hidden=True)
+# async def order67(ctx):
+#     if ctx.message.author.id not in owner:
+#         await ctx.send("😰")
+#         return
+#     await ctx.send("Oh. You're actually serious about this?")
+#     #TODO: add confirmation
+#     #chans=ctx.message.guild.channels
+#     #for i in chans:
+#     #   await i.delete()
 
 
-@bot.command(description="Need help? Want to ask for new features? Visit the Nest, the central server for all your Kingfisher needs.",hidden=True)
+@bot.command(description="Need help? Want to ask for new features? Visit the Nest, the central server for all your Kingfisher needs.")
 async def nest(ctx):
     await ctx.send("https://discord.gg/gxQVAbA")
 
@@ -469,7 +472,7 @@ async def purge(ctx,limiter=100):
         await ctx.send("Insufficient priviliges.")
 
 
-@bot.command(description="New UTF release, who dis",hidden=True)
+@bot.command(description="Accepts a message, puts out information on who reacted to it",hidden=True)
 async def emojiwatch(ctx,id):
     target=await ctx.message.channel.fetch_message(id)
     print(target.reactions)
@@ -481,7 +484,8 @@ async def emojiwatch(ctx,id):
         print("True!")
 
 
-@bot.command(description="Reminds you of stuff. Time should be specified as 13s37m42h12d leaving away time steps as desired.", aliases=["rem"],rest_is_raw=False)
+@bot.command(description="""Reminds you of stuff. Time should be specified as 13s37m42h12d leaving away time steps as desired. Reacting to the emoji will also ping you
+             when it fires. The original author will always be pinged.""", aliases=["rem"],rest_is_raw=False)
 async def remind(ctx,times,*,message):
     loop = asyncio.get_event_loop()
     timer=0
@@ -526,7 +530,6 @@ async def remind(ctx,times,*,message):
     rem_dict={"timer":time.time()+timer-timer_out,"channel":ctx.message.channel.id,"reactlist":reactlist,"embed":embed,"ID":identifier}
 
     sPlanner.enter(timer-timer_out, 10, asyncio.run_coroutine_threadsafe, argument=(ctx.message.channel.send(reactlist,embed=embed),loop,), kwargs={})
-    #TODO: fix weird characters ##I’m free on monday
 
     with open(f"reminders.kf",mode="rb+") as f:
         try:
@@ -2043,7 +2046,7 @@ async def end(ctx, force=False,invoked=False,): #start=False
 async def show(ctx,init="False"):
     chan=ctx.channel.id
 
-    print(turn_tracker[chan])
+    #print(turn_tracker[chan])
     init_list=[]
     init_str=""
 
@@ -2451,11 +2454,9 @@ async def show(ctx, cape=None):
     loc=ctx.message.guild.id
     with open(f"cash{loc}.txt") as f:
         accounts = json.load(f)
-    #print(accounts)
     for i in accounts:
         if i[0]==cape.casefold():
             await ctx.send(f"Balance for {cape}: {i[1]}$. Income: {i[2]}$.")
-    #print(accounts)
 
 
 @account.command(description="Use this to add your cape to the database and gain access to the other commands. Your cape name is your 'key'.", alias="create")
@@ -2578,21 +2579,16 @@ async def account_decay():
     await asyncio.sleep(60*1) #make sure the bot is initialized - this can be fixed better.
     while True:
 
-        locs=[465651565089259521,457290411698814980,636431438916616192] #testing 434729592352276480
-        #GH_sid 478240151987027978
-        #vanwiki_sid 435874236297379861
-        #deathland 636431438916616192
-
-        #locs=[465651565089259521,457290411698814980,434729592352276480]
-        #test_channel=bot.get_channel(435874236297379861) #nest test-dev
+        locs=[465651565089259521,457290411698814980] #testing 434729592352276480
+        #The servers that money decay and income is enabled for.
+        #Currently Grand Haven and WD LA
 
         decay=0.9**(1/7) #10% decay per week
         #gh loc=465651565089259521
-        #vanwiki loc=434729592352276480
-        #LA loc = 457290411698814980
+        #LA loc = 457290411698814980 435874236297379861
         GH_channel = bot.get_channel(478240151987027978) #GH facacs # channel ID goes here
         LA_channel = bot.get_channel(457640092240969730) #la battle ooc
-        DL_channel = bot.get_channel(636431438916616192)
+        #test_channel=bot.get_channel(435874236297379861) #nest test-dev
 
         last_updated=[]
         for loc in locs:
@@ -2622,11 +2618,8 @@ async def account_decay():
                             if loc==465651565089259521:
                                 print("printing Daily wealth message")
                                 await GH_channel.send(f"Daily Expenses computed. Total accrued wealth: {wealth}$")
-                                print("printed.")
                             if loc==457290411698814980:
                                 await LA_channel.send(f"Daily Expenses computed. Total accrued wealth: {wealth}$")
-                            if await sid(loc)=="deathland":
-                                await DL_channel.send(f"Daily Expenses computed. Total accrued wealth: {wealth}$")
                             #if loc==434729592352276480:
                             #      print(test_channel)
                             #      await test_channel.send("henlo")

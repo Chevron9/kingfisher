@@ -486,7 +486,7 @@ async def emojiwatch(ctx,id):
 
 @bot.command(description="""Reminds you of stuff. Time should be specified as 13s37m42h12d leaving away time steps as desired. Reacting to the emoji will also ping you
              when it fires. The original author will always be pinged.""", aliases=["rem"],rest_is_raw=False)
-async def remind(ctx,times,*,message):
+async def remind(ctx,times,*,message=""):
     loop = asyncio.get_event_loop()
     timer=0
     chunk=re.compile("\d+[shmd]*")

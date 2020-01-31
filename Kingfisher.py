@@ -1274,6 +1274,17 @@ async def toggle(ctx, req_role="Active"):
             await user.add_roles(role)
             await ctx.send("Welcome to the Smithy.")
 
+    elif req_role.casefold()=="Roleplay".casefold():
+        role = discord.utils.get(user.guild.roles, name="Roleplay 📝")
+        if role is None:
+            await ctx.send("No Roleplay role defined.")
+        if role in user.roles:
+            await user.remove_roles(role)
+            await ctx.message.add_reaction(bye_emoji)
+        else:
+            await user.add_roles(role)
+            await ctx.send("You're the Best! This coupon may be redeemed for 1 (one) hug.")
+
     elif (req_role.casefold()=="news".casefold()) and (loc=="test"):
         role = discord.utils.get(user.guild.roles, name="news")
         if role is None:

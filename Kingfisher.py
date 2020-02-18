@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import asyncio
+import aiofiles
 import datetime
 import json
 import logging
@@ -1244,6 +1245,54 @@ async def _time(ctx,):
 
     await ctx.send(embed=embed)
 
+
+@bot.command(description="Deletes a channel and uploads the contents. Takes the channel ID.")
+async def archive(ctx,channel_id=None):
+    if channel_id is None:
+        channel_id=ctx.channel.id
+    chan=discord.utils.get(ctx.guild.text_channels,id=int(channel_id))
+    await ctx.send(f"Collecting messages in {chan.name}....")
+    if not os.path.exists(f"archives/{chan.name}/"):
+        os.mkdir(f"archives/{chan.name}/")
+    messages = await chan.history(limit=None).flatten()
+    messages.reverse()
+    #print(len(messages))
+    output = "{chan.name}\nPINNED MESSAGES START \n"
+    for i in await chan.pins():
+        output += f"{i.created_at} {i.author} {i.content}\n"
+    output += "PINNED MESSAGES END \n"
+    for i in messages:
+        output += f"{i.created_at} {i.author} {i.content}\n"
+        if i.embeds:
+            for x in i.embeds:
+                mbd=x.to_dict()
+                #print(mbd)
+                if "title" in mbd:
+                    if ('footer' in mbd) and ('description' in mbd):
+                        output += f"EMBED {mbd['footer']['text']} **{mbd['title']}** {mbd['description']}\n"
+                else:
+                    if "fields" in mbd:
+                        for y in mbd["fields"]:
+                            #print(y)
+                            output += f"EMBED "
+                            output += f"{y['name']} {y['value']}\n"
+                    else:
+                        if ('description' in mbd):
+                            output += f"EMBED {mbd['description']}\n"
+        if i.attachments:
+            #print(i.attachments)
+            async with aiohttp.ClientSession() as session:
+                for j in i.attachments:
+                    url = j.url
+                    output += f"UPLOADED IMAGE {j.filename}\n"
+                    async with session.get(url) as resp:
+                        if resp.status == 200:
+                            f = await aiofiles.open(f'archives/{chan.name}/{j.filename}', mode='wb')
+                            await f.write(await resp.read())
+                            await f.close()
+    with open(f'archives/{chan.name}/log.txt',mode="w") as f:
+        print(output,file=f)
+    await ctx.send(f"Archival completed.")
 
 #TODO: Better QoL, list options, better configuration
 @bot.command(description="Gives (or removes) self-serve roles.")

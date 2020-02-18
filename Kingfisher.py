@@ -1257,10 +1257,10 @@ async def archive(ctx,channel_id=None):
     messages = await chan.history(limit=None).flatten()
     messages.reverse()
     #print(len(messages))
-    output = "{chan.name}\nPINNED MESSAGES START \n"
+    output = f"{chan.name}\nPINNED MESSAGES START\n"
     for i in await chan.pins():
         output += f"{i.created_at} {i.author} {i.content}\n"
-    output += "PINNED MESSAGES END \n"
+    output += "PINNED MESSAGES END\n\n"
     for i in messages:
         output += f"{i.created_at} {i.author} {i.content}\n"
         if i.embeds:
@@ -1293,6 +1293,7 @@ async def archive(ctx,channel_id=None):
     with open(f'archives/{chan.name}/log.txt',mode="w") as f:
         print(output,file=f)
     await ctx.send(f"Archival completed.")
+
 
 #TODO: Better QoL, list options, better configuration
 @bot.command(description="Gives (or removes) self-serve roles.")

@@ -42,6 +42,7 @@ version = "0.2.3 Reminders v2 "
 clientloop = asyncio.new_event_loop()
 asyncio.set_event_loop(clientloop)
 owner = [138340069311381505]  # hyper#4131
+gms= []
 
 stdlogger= logging.basicConfig(level=logging.INFO)
 #https://github.com/Rapptz/discord.py/search?q=on_command_error&unscoped_q=on_command_error
@@ -139,6 +140,7 @@ async def on_connect():
     global macros
     with open(f"roll_macros.txt",mode="r") as f:
         macros = json.load(f)
+
     return
 
 
@@ -164,6 +166,15 @@ async def on_ready():
                               argument=(channel.send(i["reactlist"],embed=i["embed"]),loop,), kwargs={})
     with open(f"reminders.kf",mode="wb+") as f:
         pickle.dump([],f)
+
+    #grab the GH gms for some command checks
+    if len(bot.guilds)>1:
+        global gms
+        grand_haven=discord.utils.get(bot.guilds,id=465651565089259521)
+        gm_iter=grand_haven.members
+        gm_list = [[x for y in x.roles if y.name=="Assistant Game Master"] for x in gm_iter]
+        gms= [[x.id for x in y] for y in gm_list]
+        gms= [item for sublist in gms for item in sublist]
 
     print('Ready!')
 
@@ -1248,6 +1259,12 @@ async def _time(ctx,):
 
 @bot.command(description="Deletes a channel and uploads the contents. Takes the channel ID.")
 async def archive(ctx,channel_id=None):
+    if (ctx.message.author.id not in owner) and (ctx.message.author.id not in gms):
+        await ctx.send(f"Bzzt! Not authorized.")
+        return
+    if (ctx.guild.id != 573815526133071873) and (ctx.guild.id != 434729592352276480):
+        await ctx.send(f"Wrong server, dummy.")
+        return
     if channel_id is None:
         channel_id=ctx.channel.id
     chan=discord.utils.get(ctx.guild.text_channels,id=int(channel_id))
@@ -1280,14 +1297,14 @@ async def archive(ctx,channel_id=None):
                         if ('description' in mbd):
                             output += f"EMBED {mbd['description']}\n"
         if i.attachments:
-            #print(i.attachments)
+            print(i.attachments)
             async with aiohttp.ClientSession() as session:
                 for j in i.attachments:
                     url = j.url
-                    output += f"UPLOADED IMAGE {j.filename}\n"
+                    output += f"UPLOADED FILE {j.id}_{j.filename}\n"
                     async with session.get(url) as resp:
                         if resp.status == 200:
-                            f = await aiofiles.open(f'archives/{chan.name}/{j.filename}', mode='wb')
+                            f = await aiofiles.open(f'archives/{chan.name}/{j.id}_{j.filename}', mode='wb')
                             await f.write(await resp.read())
                             await f.close()
     with open(f'archives/{chan.name}/log.txt',mode="w") as f:

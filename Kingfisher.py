@@ -169,16 +169,23 @@ async def on_ready():
                 print(i.embed.description)
     with open(f"reminders.kf",mode="wb+") as f:
         pickle.dump([],f)
+    print('Reminders loaded.')
+    print('--------')
 
     #grab the GH gms for some command checks
     if len(bot.guilds)>1:
         global gms
         grand_haven=discord.utils.get(bot.guilds,id=465651565089259521)
+        if grand_haven is None:
+            gms=[owner]
         gm_iter=grand_haven.members
         gm_list = [[x for y in x.roles if y.name=="Assistant Game Master"] for x in gm_iter]
         gms= [[x.id for x in y] for y in gm_list]
         gms= [item for sublist in gms for item in sublist]
-        print(f"Listed GMs: {gms}")
+    else:
+        gms=owner
+    print(f"Listed GMs: {gms}")
+    print('--------')
 
     print('Ready!')
 
@@ -1279,12 +1286,15 @@ async def archive(ctx,channel_id=None):
         channel_id=ctx.channel.id
     chan=discord.utils.get(ctx.guild.text_channels,id=int(channel_id))
     await ctx.send(f"Collecting messages in {chan.name}....")
-    if not os.path.exists(f"archives/{chan.name}/"):
-        os.mkdir(f"archives/{chan.name}/")
+    if not os.path.exists(f"archives/{ctx.guild.name}/"):
+        os.mkdir(f"archives/{ctx.guild.name}/")
+    if not os.path.exists(f"archives/{ctx.guild.name}/{chan.name}/"):
+        os.mkdir(f"archives/{ctx.guild.name}/{chan.name}/")
     messages = await chan.history(limit=None).flatten()
     messages.reverse()
     #print(len(messages))
-    output = f"{chan.name}\nPINNED MESSAGES START\n"
+    output = f"{chan.name}\nThis archive was created at {datetime.datetime.now()} by {ctx.author.name}\n"
+    output += f"\nPINNED MESSAGES START\n"
     for i in await chan.pins():
         output += f"[{i.created_at}] {i.author}: {i.content}\n"
     output += "PINNED MESSAGES END\n\n"
@@ -1314,11 +1324,11 @@ async def archive(ctx,channel_id=None):
                     output += f"UPLOADED FILE {j.id}_{j.filename}\n"
                     async with session.get(url) as resp:
                         if resp.status == 200:
-                            f = await aiofiles.open(f'archives/{chan.name}/{j.id}_{j.filename}', mode='wb')
+                            f = await aiofiles.open(f'archives/{ctx.guild.name}/{chan.name}/{j.id}_{j.filename}', mode='wb')
                             await f.write(await resp.read())
                             await f.close()
-    #with open(f'archives/{chan.name}/log.txt',mode="w") as f:
-        #print(output,file=f)
+    with open(f'archives/{ctx.guild.name}/{chan.name}/log.txt',mode="w") as f:
+        print(output,file=f)
     await ctx.send(f"Archival completed.")
 
 
@@ -1328,9 +1338,11 @@ async def cat_archive(ctx,cat_id=None):
     if cat_id is None:
         cat_id=ctx.channel.category_id
     category = discord.utils.get(ctx.guild.categories,id=cat_id)
+    await ctx.send(f"Archiving the {category.name} category. {len(category.text_channels)} channels. Please be patient.")
     for i in category.text_channels:
         #print(i.name)
         await ctx.invoke(archive,channel_id=i.id)
+    await ctx.send(f"Category archival completed.")
 
 
 #TODO: Better QoL, list options, better configuration

@@ -154,7 +154,7 @@ async def on_ready():
 
     if sPlanner.empty():
         loop = asyncio.get_event_loop()
-        with open(f"reminders.kf",mode="rb") as f:
+        with open(f"reminders.kf",mode="rb+") as f:
             try:
                 reminders = pickle.load(f)
             except EOFError:
@@ -1275,7 +1275,7 @@ async def _time(ctx,):
 
 @bot.command(description="Saves a copy of the channel on the hivewiki server.")
 @commands.check(gm_only)
-async def archive(ctx,channel_id=None):
+async def archive(ctx,channel_id=None,cat_name=None):
     if (ctx.message.author.id not in owner) and (ctx.message.author.id not in gms):
         await ctx.send(f"Bzzt! Not authorized.")
         return
@@ -1288,8 +1288,16 @@ async def archive(ctx,channel_id=None):
     await ctx.send(f"Collecting messages in {chan.name}....")
     if not os.path.exists(f"archives/{ctx.guild.name}/"):
         os.mkdir(f"archives/{ctx.guild.name}/")
-    if not os.path.exists(f"archives/{ctx.guild.name}/{chan.name}/"):
-        os.mkdir(f"archives/{ctx.guild.name}/{chan.name}/")
+    if cat_name is not None:
+        if not os.path.exists(f"archives/{ctx.guild.name}/{cat_name}"):
+            os.mkdir(f"archives/{ctx.guild.name}/{cat_name}/")
+        if not os.path.exists(f"archives/{ctx.guild.name}/{cat_name}/{chan.name}/"):
+            os.mkdir(f"archives/{ctx.guild.name}/{cat_name}/{chan.name}/")
+        path = f"archives/{ctx.guild.name}/{cat_name}/{chan.name}/"
+    elif cat_name is None:
+        if not os.path.exists(f"archives/{ctx.guild.name}/{chan.name}/"):
+            os.mkdir(f"archives/{ctx.guild.name}/{chan.name}/")
+        path = f"archives/{ctx.guild.name}/{chan.name}/"
     messages = await chan.history(limit=None).flatten()
     messages.reverse()
     #print(len(messages))
@@ -1324,10 +1332,10 @@ async def archive(ctx,channel_id=None):
                     output += f"UPLOADED FILE {j.id}_{j.filename}\n"
                     async with session.get(url) as resp:
                         if resp.status == 200:
-                            f = await aiofiles.open(f'archives/{ctx.guild.name}/{chan.name}/{j.id}_{j.filename}', mode='wb')
+                            f = await aiofiles.open(f'{path}/{j.id}_{j.filename}', mode='wb')
                             await f.write(await resp.read())
                             await f.close()
-    with open(f'archives/{ctx.guild.name}/{chan.name}/log.txt',mode="w") as f:
+    with open(f'{path}/log.txt',mode="w") as f:
         print(output,file=f)
     await ctx.send(f"Archival completed.")
 
@@ -1341,7 +1349,7 @@ async def cat_archive(ctx,cat_id=None):
     await ctx.send(f"Archiving the {category.name} category. {len(category.text_channels)} channels. Please be patient.")
     for i in category.text_channels:
         #print(i.name)
-        await ctx.invoke(archive,channel_id=i.id)
+        await ctx.invoke(archive,channel_id=i.id,cat_name=category.name)
     await ctx.send(f"Category archival completed.")
 
 

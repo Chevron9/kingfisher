@@ -162,8 +162,11 @@ async def on_ready():
         for i in reminders:
             #print(i["embed"].description)
             channel=bot.get_channel(i["channel"])
-            sPlanner.enterabs(i["timer"], 10, asyncio.run_coroutine_threadsafe,
-                              argument=(channel.send(i["reactlist"],embed=i["embed"]),loop,), kwargs={})
+            try:
+                sPlanner.enterabs(i["timer"], 10, asyncio.run_coroutine_threadsafe,
+                                  argument=(channel.send(i["reactlist"],embed=i["embed"]),loop,), kwargs={})
+            except AttributeError:
+                print(i.embed.description)
     with open(f"reminders.kf",mode="wb+") as f:
         pickle.dump([],f)
 
@@ -175,6 +178,7 @@ async def on_ready():
         gm_list = [[x for y in x.roles if y.name=="Assistant Game Master"] for x in gm_iter]
         gms= [[x.id for x in y] for y in gm_list]
         gms= [item for sublist in gms for item in sublist]
+        print(f"Listed GMs: {gms}")
 
     print('Ready!')
 
@@ -352,6 +356,10 @@ def owner_only(ctx):
     return ctx.message.author.id in owner
 
 
+def gm_only(ctx):
+    return ctx.message.author.id in gms
+
+
 #global check to make sure blocked people can't mess around
 @bot.check
 def mute_user(ctx):
@@ -445,6 +453,7 @@ async def on_command_error(context, exception):
             traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
 
 
+@commands.check(owner_only)
 @bot.command(description="Makes the bot leave the server.",hidden=True)
 async def order66(ctx):
     if ctx.message.author.id not in owner:
@@ -1258,6 +1267,7 @@ async def _time(ctx,):
 
 
 @bot.command(description="Deletes a channel and uploads the contents. Takes the channel ID.")
+@commands.check(gm_only)
 async def archive(ctx,channel_id=None):
     if (ctx.message.author.id not in owner) and (ctx.message.author.id not in gms):
         await ctx.send(f"Bzzt! Not authorized.")
@@ -1276,10 +1286,10 @@ async def archive(ctx,channel_id=None):
     #print(len(messages))
     output = f"{chan.name}\nPINNED MESSAGES START\n"
     for i in await chan.pins():
-        output += f"{i.created_at} {i.author} {i.content}\n"
+        output += f"[{i.created_at}] {i.author}: {i.content}\n"
     output += "PINNED MESSAGES END\n\n"
     for i in messages:
-        output += f"{i.created_at} {i.author} {i.content}\n"
+        output += f"[{i.created_at}] {i.author}: {i.content}\n"
         if i.embeds:
             for x in i.embeds:
                 mbd=x.to_dict()
@@ -1297,7 +1307,7 @@ async def archive(ctx,channel_id=None):
                         if ('description' in mbd):
                             output += f"EMBED {mbd['description']}\n"
         if i.attachments:
-            print(i.attachments)
+            #print(i.attachments)
             async with aiohttp.ClientSession() as session:
                 for j in i.attachments:
                     url = j.url
@@ -1307,9 +1317,20 @@ async def archive(ctx,channel_id=None):
                             f = await aiofiles.open(f'archives/{chan.name}/{j.id}_{j.filename}', mode='wb')
                             await f.write(await resp.read())
                             await f.close()
-    with open(f'archives/{chan.name}/log.txt',mode="w") as f:
-        print(output,file=f)
+    #with open(f'archives/{chan.name}/log.txt',mode="w") as f:
+        #print(output,file=f)
     await ctx.send(f"Archival completed.")
+
+
+@bot.command(description="Deletes a channel and uploads the contents. Takes the channel ID.")
+@commands.check(gm_only)
+async def cat_archive(ctx,cat_id=None):
+    if cat_id is None:
+        cat_id=ctx.channel.category_id
+    category = discord.utils.get(ctx.guild.categories,id=cat_id)
+    for i in category.text_channels:
+        #print(i.name)
+        await ctx.invoke(archive,channel_id=i.id)
 
 
 #TODO: Better QoL, list options, better configuration

@@ -32,7 +32,7 @@ from pytz import timezone
 from ruamel.yaml import YAML
 from operator import itemgetter
 
-version = "0.2.3 Reminders v2 "
+version = "0.2.4 Archivist"
 
 #TODO: add self-tagging, servers
 #TODO: ranking rework
@@ -1266,7 +1266,7 @@ async def _time(ctx,):
     await ctx.send(embed=embed)
 
 
-@bot.command(description="Deletes a channel and uploads the contents. Takes the channel ID.")
+@bot.command(description="Saves a copy of the channel on the hivewiki server.")
 @commands.check(gm_only)
 async def archive(ctx,channel_id=None):
     if (ctx.message.author.id not in owner) and (ctx.message.author.id not in gms):
@@ -1322,7 +1322,7 @@ async def archive(ctx,channel_id=None):
     await ctx.send(f"Archival completed.")
 
 
-@bot.command(description="Deletes a channel and uploads the contents. Takes the channel ID.")
+@bot.command(description="Saves a copy of all channels in the category on the hivewiki server.")
 @commands.check(gm_only)
 async def cat_archive(ctx,cat_id=None):
     if cat_id is None:

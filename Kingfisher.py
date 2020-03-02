@@ -120,6 +120,13 @@ typ_colours = {"Bash":0x0137f6,"Pierce":0xffa500,"Cut":0xb22649,"Freeze":0x00ecf
                "Armor":0x565759,"Engine":0x565759,"Wheel":0x565759,"System":0x565759,"Structural":0x565759}
 muted_usr = []
 
+with open(f"gh_factions.yaml",mode="r+") as f:
+    gh_factions=YAML.load(f)
+    gh_factions=dict(gh_factions) #YAML can't handle tuples, so we have convert back
+    for k in gh_factions:
+        gh_factions[k]=tuple(gh_factions[k])
+
+
 # Here you can modify the bot's prefix and description and whether it sends help in direct messages or not.
 bot = Bot(description=f"Thinkerbot version {version}", command_prefix=(">",";"), pm_help=False, case_insensitive=True,owner_id=138340069311381505)
 
@@ -1276,12 +1283,9 @@ async def _time(ctx,):
 @bot.command(description="Saves a copy of the channel on the hivewiki server.")
 @commands.check(gm_only)
 async def archive(ctx,channel_id=None,cat_name=None):
-    if (ctx.message.author.id not in owner) and (ctx.message.author.id not in gms):
-        await ctx.send(f"Bzzt! Not authorized.")
-        return
-    if (ctx.guild.id != 573815526133071873) and (ctx.guild.id != 434729592352276480):
-        await ctx.send(f"Wrong server, dummy.")
-        return
+    #if (ctx.guild.id != 573815526133071873) and (ctx.guild.id != 434729592352276480):
+    #    await ctx.send(f"Wrong server, dummy.")
+    #    return
     if channel_id is None:
         channel_id=ctx.channel.id
     chan=discord.utils.get(ctx.guild.text_channels,id=int(channel_id))

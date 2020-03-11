@@ -492,6 +492,7 @@ async def order66(ctx,cat_id=None):
         reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=check)
     except asyncio.TimeoutError:
         await ctx.send(f"Process terminated.")
+        await msg.remove_reaction('🚮',member=ctx.message.guild.me)
         return
     else:
         pass

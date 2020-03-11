@@ -89,12 +89,6 @@ gh_factions = {"neutral":(255,255,255), "independent":(163, 145, 108)}
 #"x":ImageColor.getrgb("x"),
 # discord default colours: https://www.reddit.com/r/discordapp/comments/849bxc/what_are_the_hex_values_of_all_the_default_role/dvo5k3g/
 
-# with open(f"gh_factions.yaml",mode="r+") as f:
-#     gh_factions=YAML.load(f)
-#     gh_factions=dict(gh_factions) #YAML can't handle tuples, so we have convert back
-#     for k in gh_factions:
-#         gh_factions[k]=tuple(gh_factions[k])
-
 #vials
 VialDoc = gc.open_by_key("1yksmYY7q1GKx4tXVpb7oSxffgEh--hOvXkDwLVgCdlg") # arcan's vial doc
 sheet = VialDoc.worksheet("Full Vials")
@@ -119,12 +113,6 @@ gh_areas = [(330.00,352.00),(412.00,226.00),(724.00,224.00),(688.00,350.00),(842
 typ_colours = {"Bash":0x0137f6,"Pierce":0xffa500,"Cut":0xb22649,"Freeze":0x00ecff,"Shock":0xd6ff00,"Rend":0x9937a5,"Burn":0x0fe754, "Poison":0x334403,
                "Armor":0x565759,"Engine":0x565759,"Wheel":0x565759,"System":0x565759,"Structural":0x565759}
 muted_usr = []
-
-with open(f"gh_factions.yaml",mode="r+") as f:
-    gh_factions=YAML.load(f)
-    gh_factions=dict(gh_factions) #YAML can't handle tuples, so we have convert back
-    for k in gh_factions:
-        gh_factions[k]=tuple(gh_factions[k])
 
 
 # Here you can modify the bot's prefix and description and whether it sends help in direct messages or not.
@@ -193,6 +181,13 @@ async def on_ready():
         gms=owner
     print(f"Listed GMs: {gms}")
     print('--------')
+
+    global gh_factions
+    with open(f"gh_factions.yaml",mode="r+") as f:
+        gh_factions=yaml.load(f)
+        gh_factions=dict(gh_factions) #YAML can't handle tuples, so we have convert back
+        for k in gh_factions:
+            gh_factions[k]=tuple(gh_factions[k])
 
     print('Ready!')
 
@@ -469,26 +464,43 @@ async def on_command_error(context, exception):
 
 @commands.check(owner_only)
 @bot.command(description="Makes the bot leave the server.",hidden=True)
-async def order66(ctx):
+async def order67(ctx):
     if ctx.message.author.id not in owner:
         await ctx.send("😰")
         return
-    await ctx.send("Extermination in progress...")
-    await asyncio.sleep(60*3)
     await ctx.send("Macht’s gut, und danke für den Fisch.")
     await ctx.message.guild.leave()
 
 
-# @bot.command(description="Deletes all channels.",hidden=True)
-# async def order67(ctx):
-#     if ctx.message.author.id not in owner:
-#         await ctx.send("😰")
-#         return
-#     await ctx.send("Oh. You're actually serious about this?")
-#     #TODO: add confirmation
-#     #chans=ctx.message.guild.channels
-#     #for i in chans:
-#     #   await i.delete()
+@bot.command(description="Deletes channels of a selected category.",hidden=True)
+async def order66(ctx,cat_id=None):
+    if ctx.message.author.id not in owner:
+        await ctx.send("I'm going to make you regret that.")
+        return
+    if cat_id is None:
+        cat_id=ctx.channel.category_id
+    else:
+        cat_id=int(cat_id)
+    category = discord.utils.get(ctx.guild.categories,id=cat_id)
+    msg=await ctx.send(f"Please confirm you want to **__DELETE__** all channels in the {category.name} category by pressing 🚮!")
+    await msg.add_reaction('🚮')
+
+    def check(reaction, user):
+        return user == ctx.message.author and str(reaction.emoji) == '🚮'
+
+    try:
+        reaction, user = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+    except asyncio.TimeoutError:
+        await ctx.send(f"Process terminated.")
+        return
+    else:
+        pass
+    await ctx.send(f"Deleting the {category.name} category. {len(category.text_channels)} channels. Please stand by.")
+    for i in category.text_channels:
+        await ctx.send(f"Deleting {i.name}.")
+        await i.delete()
+    await category.delete()
+    await ctx.send(f"TERMINATION. AGREEMENT.")
 
 
 @bot.command(description="Need help? Want to ask for new features? Visit the Nest, the central server for all your Kingfisher needs.")
@@ -553,7 +565,7 @@ async def remind(ctx,times,*,message=""):
     def check(reaction, user):
         return user != ctx.message.author and str(reaction.emoji) == '\N{Timer Clock}' and user != bot.user
 
-    timer_out=min(60.0,timer)
+    timer_out=min(120.0,timer)
     try: #ping everyone that also reacts to our react emoji
         reaction, user = await bot.wait_for('reaction_add', timeout=timer_out, check=check)
     except asyncio.TimeoutError:
@@ -1192,14 +1204,15 @@ async def faction(ctx):
             for k in gh_factions:
                 gh_factions[k]=tuple(gh_factions[k])
         print(gh_factions)
+    await ctx.send(f"Faction list refreshed.")
 
 
-@faction.command(description="",aliases=[])
+@faction.command(description="Prints the gh_factions variable to the console.",aliases=[],hidden=True)
 async def check(ctx):
     print(gh_factions)
 
 
-@faction.command(description="colour should be in discord (hex) format", aliases=[],hidden=True)
+@faction.command(description="Colour should be in discord (hex) format", aliases=[],hidden=True)
 async def add(ctx,name,color):
     if ctx.message.author.id not in owner:
         await ctx.send(f"Bzzt! Not authorized.")
@@ -1283,9 +1296,6 @@ async def _time(ctx,):
 @bot.command(description="Saves a copy of the channel on the hivewiki server.")
 @commands.check(gm_only)
 async def archive(ctx,channel_id=None,cat_name=None):
-    #if (ctx.guild.id != 573815526133071873) and (ctx.guild.id != 434729592352276480):
-    #    await ctx.send(f"Wrong server, dummy.")
-    #    return
     if channel_id is None:
         channel_id=ctx.channel.id
     chan=discord.utils.get(ctx.guild.text_channels,id=int(channel_id))
@@ -1349,6 +1359,8 @@ async def archive(ctx,channel_id=None,cat_name=None):
 async def cat_archive(ctx,cat_id=None):
     if cat_id is None:
         cat_id=ctx.channel.category_id
+    else:
+        cat_id=int(cat_id)
     category = discord.utils.get(ctx.guild.categories,id=cat_id)
     await ctx.send(f"Archiving the {category.name} category. {len(category.text_channels)} channels. Please be patient.")
     for i in category.text_channels:

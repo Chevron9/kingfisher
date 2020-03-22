@@ -44,7 +44,7 @@ asyncio.set_event_loop(clientloop)
 owner = [138340069311381505]  # hyper#4131
 gms= []
 
-stdlogger= logging.basicConfig(level=logging.INFO)
+stdlogger = logging.basicConfig(level=logging.INFO) #ignore
 #https://github.com/Rapptz/discord.py/search?q=on_command_error&unscoped_q=on_command_error
 logger = logging.getLogger('discord')
 logger.setLevel(logging.INFO)
@@ -100,7 +100,7 @@ sPlanner = sched.scheduler(time.time, time.sleep) # class sched.scheduler(timefu
 #################
 macros={}
 
-#Map path, used for claim image diting
+#Map path, used for claim image editing
 gh_areas = [(330.00,352.00),(412.00,226.00),(724.00,224.00),(688.00,350.00),(842.00,386.00),(936.00,212.00),(1164.00,410.00),(1300.00,214.00),(1424.00,160.00),
             (1524.00,50.00),(1538.00,176.00),(1402.00,328.00),(1520.00,352.00),(1528.00,498.00),(1414.00,476.00),(1098.00,536.00),(858.00,550.00),(690.00,508.00),(464.00,424.00),
             (494.00,524.00),(358.00,604.00),(376.00,714.00),(486.00,754.00),(686.00,656.00),(718.00,726.00),(640.00,728.00),(972.00,624.00),(1360.00,696.00),(1502.00,676.00),
@@ -250,6 +250,8 @@ async def sid(loc):
         sid="deathland"
     elif loc==656862194918490112:
         sid="Benelux"
+    elif loc==691221976311660595:
+        sid="gh_fantasy"
     else:
         sid="undefined"
     return sid
@@ -1018,7 +1020,7 @@ async def add(ctx,title,comment=None,url=None):
         yaml.dump(bm_feed,f)
     await ctx.message.add_reaction("✅")
 
-
+#TODO: fix this
 @bookmark.command(description="""Remove links from your bookmark. Use this CAREFULLY!
                                 If you have multiple entries with the same comment, you *should* specify exactly which one should get deleted by also
                                 including the content.""",)
@@ -2715,13 +2717,15 @@ async def account_decay():
     await asyncio.sleep(60*1) #make sure the bot is initialized - this can be fixed better.
     while True:
 
-        locs=[465651565089259521,457290411698814980] #testing 434729592352276480
+        locs=[465651565089259521,457290411698814980,691221976311660595] #testing 434729592352276480
         #The servers that money decay and income is enabled for.
         #Currently Grand Haven 465651565089259521 and WD LA 457290411698814980
+        # duskhaven 691221976311660595
 
         decay=0.9**(1/7) #10% decay per week
         GH_channel = bot.get_channel(478240151987027978) #GH facacs # channel ID goes here
         LA_channel = bot.get_channel(457640092240969730) #la battle-ooc
+        MF_channel = bot.get_channel(691369881039536178) #MF imperial-bank-of-dusthaven
         #test_channel=bot.get_channel(435874236297379861) #nest test-dev
 
         last_updated=[]
@@ -2753,6 +2757,8 @@ async def account_decay():
                                 await GH_channel.send(f"Daily Expenses computed. Total accrued wealth: {wealth}$")
                             if loc==457290411698814980:
                                 await LA_channel.send(f"Daily Expenses computed. Total accrued wealth: {wealth}$")
+                            if loc==691221976311660595:
+                                await MF_channel.send(f"Daily Income computed.")    
                             #if loc==434729592352276480:
                             #      print(test_channel)
                             #      await test_channel.send("henlo")

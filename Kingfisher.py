@@ -2601,7 +2601,7 @@ async def show(ctx, cape=None):
 async def make(ctx,cape=None,amount=0,income=0):
     loc=ctx.message.guild.id
     if (ctx.message.channel.id != 478240151987027978 and ctx.message.channel.id != 435874236297379861 and ctx.message.channel.id != 537152965375688719
-            and ctx.guild.id!=457290411698814980 and ctx.message.channel.id != 638118490628292612):
+            and ctx.guild.id!=457290411698814980 and ctx.message.channel.id != 638118490628292612 and ctx.message.channel.id != 691369881039536178):
         await ctx.send("BoK only operates in #faction-actions!")
         return
     if cape is None:
@@ -2634,7 +2634,7 @@ async def make(ctx,cape=None,amount=0,income=0):
 async def update(ctx,cape, amount):
     loc=ctx.message.guild.id
     if (ctx.message.channel.id != 478240151987027978 and ctx.message.channel.id != 435874236297379861 and ctx.message.channel.id != 537152965375688719
-            and ctx.guild.id!=457290411698814980 and ctx.message.channel.id != 638118490628292612):
+            and ctx.guild.id!=457290411698814980 and ctx.message.channel.id != 638118490628292612 and ctx.message.channel.id != 691369881039536178):
         await ctx.send("BoK only operates in #faction-actions!")
         return
     with open(f"cash{loc}.txt") as f:
@@ -2659,7 +2659,7 @@ async def update(ctx,cape, amount):
 async def send(ctx,cape,target, amount):
     loc=ctx.message.guild.id
     if (ctx.message.channel.id != 478240151987027978 and ctx.message.channel.id != 435874236297379861 and ctx.message.channel.id != 537152965375688719
-            and ctx.guild.id!=457290411698814980 and ctx.message.channel.id != 638118490628292612):
+            and ctx.guild.id!=457290411698814980 and ctx.message.channel.id != 638118490628292612 and ctx.message.channel.id != 691369881039536178):
         await ctx.send("BoK only operates in #faction-actions!")
         return
     with open(f"cash{loc}.txt") as f:
@@ -2692,7 +2692,7 @@ async def send(ctx,cape,target, amount):
 async def income(ctx,cape, amount):
     loc=ctx.message.guild.id
     if (ctx.message.channel.id != 478240151987027978 and ctx.message.channel.id != 435874236297379861 and ctx.message.channel.id != 537152965375688719
-            and ctx.guild.id!=457290411698814980 and ctx.message.channel.id != 638118490628292612):
+            and ctx.guild.id!=457290411698814980 and ctx.message.channel.id != 638118490628292612 and ctx.message.channel.id != 691369881039536178):
         await ctx.send("BoK only operates in #faction-actions!")
         return
     with open(f"cash{loc}.txt") as f:
@@ -2747,7 +2747,10 @@ async def account_decay():
                                 for i in accounts:
                                     if loc==465651565089259521 or loc==434729592352276480:
                                         i[1]=round(i[1]*decay)
-                                    i[1]=i[1]+round((i[2]/7))
+                                    if loc==691221976311660595:
+                                        i[1]=i[1]+(i[2])
+                                    else:
+                                        i[1]=i[1]+round((i[2]/7))
                                     wealth+=i[1]
                                 json.dump(accounts,g)
 

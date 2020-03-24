@@ -7,10 +7,30 @@ gh:
   - 163
   - 145
   - 108
+  kami:
+  - 173
+  - 20
+  - 87
+  warmongers:
+  - 255
+  - 105
+  - 180
+  watch:
+  - 96
+  - 127
+  - 172
+  phalanx:
+  - 255
+  - 204
+  - 0
+  gaia:
+  - 121
+  - 84
+  - 168
+  mavericks:
+  - 185
+  - 40
+  - 40
 dh:
   neutral: *id001
   independent: *id002
-  orcs:
-  - 250
-  - 16
-  - 12

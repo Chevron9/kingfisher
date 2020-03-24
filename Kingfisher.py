@@ -223,15 +223,17 @@ async def on_ready():
     print('--------')
 
     global rp_factions
-    try:
-        with open(f"rp_factions.yaml",mode="r+") as f:
-            rp_factions=yaml.load(f)
-            rp_factions=dict(rp_factions) #YAML can't handle tuples, so we have convert back
-            for guilds in rp_factions:
-                for k in guilds:
-                    guilds[k]=tuple(guilds[k])
-    except:
-        print("Error when loading factions file.")
+
+    with open(f"rp_factions.yaml",mode="r+") as f:
+        rp_factions=yaml.load(f)
+        #rp_factions=repr(dict(rp_factions))
+        print(rp_factions)
+        rp_factions=dict(rp_factions) #YAML can't handle tuples, so we have convert back
+        for guilds in rp_factions:
+            rp_factions[guilds]=dict(rp_factions[guilds]) #we're also getting rid of all these fucki-annoying ordereddicts
+        for guilds in rp_factions.keys():
+            for k in rp_factions[guilds].keys():
+                rp_factions[guilds][k]=tuple(rp_factions[guilds][k])
 
     print('Ready!')
 
@@ -743,15 +745,16 @@ async def updateFeed(ctx):
     triggerfeed = triggerSheet.get_all_values()
     pactfeed = RefSheet.worksheet("Pactluck")
     pactfeed = pactfeed.get_all_values()
-    try:
-        with open(f"rp_factions.yaml",mode="r+") as f:
-            rp_factions=yaml.load(f)
-            rp_factions=dict(rp_factions) #YAML can't handle tuples, so we have convert back
-            for guilds in rp_factions:
-                for k in guilds:
-                    guilds[k]=tuple(guilds[k])
-    except:
-        print("Error when loading factions file.")
+    with open(f"rp_factions.yaml",mode="r+") as f:
+        rp_factions=yaml.load(f)
+        #rp_factions=repr(dict(rp_factions))
+        print(rp_factions)
+        rp_factions=dict(rp_factions) #YAML can't handle tuples, so we have convert back
+        for guilds in rp_factions:
+            rp_factions[guilds]=dict(rp_factions[guilds]) #we're also getting rid of all these fucki-annoying ordereddicts
+        for guilds in rp_factions.keys():
+            for k in rp_factions[guilds].keys():
+                rp_factions[guilds][k]=tuple(rp_factions[guilds][k])
 
     await ctx.message.add_reaction("\U00002714")
 
@@ -1245,12 +1248,14 @@ async def faction(ctx):
                 rp_factions=yaml.load(f)
                 rp_factions=dict(rp_factions) #YAML can't handle tuples, so we have convert back
                 for guilds in rp_factions:
-                    for k in guilds:
-                        guilds[k]=tuple(guilds[k])
+                    rp_factions[guilds]=dict(rp_factions[guilds]) #we're also getting rid of all these fucki-annoying ordereddicts
+                for guilds in rp_factions.keys():
+                    for k in rp_factions[guilds].keys():
+                        rp_factions[guilds][k]=tuple(rp_factions[guilds][k])
                 print(rp_factions)
         except:
             print("Error when loading factions file.")
-    await ctx.send(f"Faction list refreshed.")
+        await ctx.send(f"Faction list refreshed.")
 
 
 @faction.command(description="Prints the rp_factions variable to the console.",aliases=[],hidden=True)

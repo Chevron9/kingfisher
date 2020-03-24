@@ -85,7 +85,8 @@ pactfeed = RefSheet.worksheet("Pactluck")
 pactfeed = pactfeed.get_all_values()
 
 #Factions
-gh_factions = {"neutral":(255,255,255), "independent":(163, 145, 108)}
+
+rp_factions = {"gh":{"neutral":(255,255,255), "independent":(163, 145, 108)},"dh":{"neutral":(255,255,255), "independent":(163, 145, 108)}}
 #"x":ImageColor.getrgb("x"),
 # discord default colours: https://www.reddit.com/r/discordapp/comments/849bxc/what_are_the_hex_values_of_all_the_default_role/dvo5k3g/
 
@@ -101,14 +102,50 @@ sPlanner = sched.scheduler(time.time, time.sleep) # class sched.scheduler(timefu
 macros={}
 
 #Map path, used for claim image editing
-gh_areas = [(330.00,352.00),(412.00,226.00),(724.00,224.00),(688.00,350.00),(842.00,386.00),(936.00,212.00),(1164.00,410.00),(1300.00,214.00),(1424.00,160.00),
+rp_areas = {"gh":[(330.00,352.00),(412.00,226.00),(724.00,224.00),(688.00,350.00),(842.00,386.00),(936.00,212.00),(1164.00,410.00),(1300.00,214.00),(1424.00,160.00),
             (1524.00,50.00),(1538.00,176.00),(1402.00,328.00),(1520.00,352.00),(1528.00,498.00),(1414.00,476.00),(1098.00,536.00),(858.00,550.00),(690.00,508.00),(464.00,424.00),
             (494.00,524.00),(358.00,604.00),(376.00,714.00),(486.00,754.00),(686.00,656.00),(718.00,726.00),(640.00,728.00),(972.00,624.00),(1360.00,696.00),(1502.00,676.00),
             (1610.00,696.00),(1630.00,908.00),(1322.00,796.00),(1090.00,816.00),(828.00,808.00),(734.00,914.00),(750.00,1036.00),
             (498.00,976.00),(512.00,1082.00),(582.00,1110.00),(412.00,1260.00),(628.00,1302.00),(750.00,1190.00),(876.00,1054.00),(1090.00,1044.00),(1064.00,1174.00),(1202.00,1168.00),
             (1034.00,1320.00),(1218.00,1402.00),(1312.00,1046.00),(1488.00,1058.00),(1646.00,1326.00),(1456.00,1288.00),(1392.00,1406.00),(1044.00,1428.00),(824.00,1406.00),
             (576.00,1430.00),(486.00,1512.00),(420.00,1402.00),(426.00,1528.00),(606.00,1652.00),(890.00,1664.00),(1096.00,1646.00),(1260.00,1640.00),(1440.00,1624.50),(1489.50,1438.50),
-            (1608.00,1599.00)]
+            (1608.00,1599.00)],
+            "dh":[(213.00,67.50),
+            (106.50,216.00),
+            (63.00,525.00),
+            (90.00,760.50),
+            (253.50,610.50),
+            (297.00,456.00),
+            (313.50,327.00),
+            (288.00,211.50),
+            (498.00,85.50),
+            (508.50,202.50),
+            (564.00,471.00),
+            (634.50,676.50),
+            (769.50,793.50),
+            (775.50,589.50),
+            (736.50,457.50),
+            (711.00,253.50),
+            (709.50,76.50),
+            (912.00,96.00),
+            (943.50,285.00),
+            (885.00,442.50),
+            (1024.50,486.00),
+            (1006.50,655.50),
+            (912.00,838.50),
+            (1087.50,886.50),
+            (1206.00,750.00),
+            (1219.50,619.50),
+            (1200.00,462.00),
+            (1137.00,336.00),
+            (1075.50,180.00),
+            (1294.50,184.50),
+            (1420.50,238.50),
+            (1224.00,355.50),
+            (1408.50,370.50),
+            (1432.50,540.00),
+            (1449.00,690.00),
+            (1422.00,985.50)]}
 
 typ_colours = {"Bash":0x0137f6,"Pierce":0xffa500,"Cut":0xb22649,"Freeze":0x00ecff,"Shock":0xd6ff00,"Rend":0x9937a5,"Burn":0x0fe754, "Poison":0x334403,
                "Armor":0x565759,"Engine":0x565759,"Wheel":0x565759,"System":0x565759,"Structural":0x565759}
@@ -149,19 +186,22 @@ async def on_ready():
 
     if sPlanner.empty():
         loop = asyncio.get_event_loop()
-        with open(f"reminders.kf",mode="rb+") as f:
-            try:
-                reminders = pickle.load(f)
-            except EOFError:
-                reminders = []
-        for i in reminders:
-            #print(i["embed"].description)
-            channel=bot.get_channel(i["channel"])
-            try:
-                sPlanner.enterabs(i["timer"], 10, asyncio.run_coroutine_threadsafe,
-                                  argument=(channel.send(i["reactlist"],embed=i["embed"]),loop,), kwargs={})
-            except AttributeError:
-                print(i.embed.description)
+        try:
+            with open(f"reminders.kf",mode="rb+") as f:
+                try:
+                    reminders = pickle.load(f)
+                except EOFError:
+                    reminders = []
+            for i in reminders:
+                #print(i["embed"].description)
+                channel=bot.get_channel(i["channel"])
+                try:
+                    sPlanner.enterabs(i["timer"], 10, asyncio.run_coroutine_threadsafe,
+                                    argument=(channel.send(i["reactlist"],embed=i["embed"]),loop,), kwargs={})
+                except AttributeError:
+                    print(i.embed.description)
+        except FileNotFoundError:
+            print("No reminders file!")
     with open(f"reminders.kf",mode="wb+") as f:
         pickle.dump([],f)
     print('Reminders loaded.')
@@ -182,12 +222,16 @@ async def on_ready():
     print(f"Listed GMs: {gms}")
     print('--------')
 
-    global gh_factions
-    with open(f"gh_factions.yaml",mode="r+") as f:
-        gh_factions=yaml.load(f)
-        gh_factions=dict(gh_factions) #YAML can't handle tuples, so we have convert back
-        for k in gh_factions:
-            gh_factions[k]=tuple(gh_factions[k])
+    global rp_factions
+    try:
+        with open(f"rp_factions.yaml",mode="r+") as f:
+            rp_factions=yaml.load(f)
+            rp_factions=dict(rp_factions) #YAML can't handle tuples, so we have convert back
+            for guilds in rp_factions:
+                for k in guilds:
+                    guilds[k]=tuple(guilds[k])
+    except:
+        print("Error when loading factions file.")
 
     print('Ready!')
 
@@ -200,15 +244,12 @@ async def on_ready():
 async def mapUpdate(faction,square,sid):
     detroitmap = Image.open(f"map_{sid}/factionmap.png")
     legend = Image.open(f"map_{sid}/Legend_alpha.png")
-    #bg = Image.open(f"map_{sid}/background.png") #just plain white to make it visible against discord BG
 
-    if (sid=="gh") or (sid=="test"):
-        ImageDraw.floodfill(detroitmap, gh_areas[square-1], (255,255,255))
-        ImageDraw.floodfill(detroitmap, gh_areas[square-1], gh_factions[faction])
+    ImageDraw.floodfill(detroitmap, rp_areas[sid][square-1], (255,255,255))
+    ImageDraw.floodfill(detroitmap, rp_areas[sid][square-1], rp_factions[sid][faction])
 
     detroitmap.save(f"map_{sid}/factionmap.png") #only the coloured squares
     detroitmap = Image.alpha_composite(detroitmap,legend)
-    #detroitmap = Image.composite(detroitmap, bg, detroitmap)
     detroitmap.save(f"map_{sid}/map.png") #output
 
 
@@ -234,10 +275,10 @@ async def sid(loc):
         sid="gh"
     elif loc==573815526133071873:
         sid="gh" #shardforge server, attached to GH
+    elif loc==434729592352276480:
+        sid="gh" #aka nest, aka test server
     elif loc==406587085278150656:
         sid="segovia"
-    elif loc==434729592352276480:
-        sid="test" #aka nest
     elif loc==457290411698814980:
         sid="la"
     elif loc==521547663641018378:
@@ -251,9 +292,9 @@ async def sid(loc):
     elif loc==656862194918490112:
         sid="Benelux"
     elif loc==691221976311660595:
-        sid="gh_fantasy"
+        sid="dh"
     else:
-        sid="undefined"
+        sid=str(loc)
     return sid
 
 
@@ -679,7 +720,7 @@ async def updateFeed(ctx):
     global perksfeed
     global augfeed
     global triggerfeed
-    global gh_factions
+    global rp_factions
     credentials = ServiceAccountCredentials.from_json_keyfile_name('gspread.json', scope)
     gc = gspread.authorize(credentials)
     RefSheet = gc.open_by_key(reference)
@@ -702,11 +743,16 @@ async def updateFeed(ctx):
     triggerfeed = triggerSheet.get_all_values()
     pactfeed = RefSheet.worksheet("Pactluck")
     pactfeed = pactfeed.get_all_values()
-    with open(f"gh_factions.yaml",mode="r+") as f:
-        gh_factions=yaml.load(f)
-        gh_factions=dict(gh_factions) #YAML can't handle tuples, so we have convert back
-        for k in gh_factions:
-            gh_factions[k]=tuple(gh_factions[k])
+    try:
+        with open(f"rp_factions.yaml",mode="r+") as f:
+            rp_factions=yaml.load(f)
+            rp_factions=dict(rp_factions) #YAML can't handle tuples, so we have convert back
+            for guilds in rp_factions:
+                for k in guilds:
+                    guilds[k]=tuple(guilds[k])
+    except:
+        print("Error when loading factions file.")
+
     await ctx.message.add_reaction("\U00002714")
 
 
@@ -918,35 +964,28 @@ async def _map(ctx):
 
 @bot.command(description="Use this command to claim squares on the map. Faction name needs to be spelled right. Use >claim to see the current map. Use >claim factions to see available factions")
 async def claim(ctx,faction=None,square:int = None):
-    loc=ctx.message.guild.id  #465651565089259521 GH
-    if loc==465651565089259521:
-        sid="gh"
-    else:
-        sid="test"
-    if (ctx.message.channel.id != 358409511838547979) and (ctx.message.channel.id != 435874236297379861) and (ctx.message.channel.id != 478240151987027978):
+    guild=await sid(ctx.message.guild.id)
+    if ((ctx.message.channel.id != 358409511838547979) and (ctx.message.channel.id != 435874236297379861) and (ctx.message.channel.id != 478240151987027978)
+        and (ctx.message.channel.id != 691405676920176751)):
 
         await ctx.send(f"Can only claim in #faction-actions!")
         return
 
     cacher=random.randint(1, 100000000000)
     if faction=="factions":
-        if sid=="gh":
-            await ctx.send(", ".join(list(gh_factions.keys())))
-            return
-        elif sid=="test":
-            await ctx.send(", ".join(list(gh_factions.keys())))
-            return
+        await ctx.send(", ".join(list(rp_factions[guild].keys())))
+        return
     elif faction is None and square is None:
-        await ctx.send(f"https://www.hivewiki.de/kingfisher/map_{sid}/map.png?nocaching={cacher}")
+        await ctx.send(f"https://www.hivewiki.de/kingfisher/map_{guild}/map.png?nocaching={cacher}")
         return
     elif faction is not None and square is None:
         await ctx.send("Correct format: >claim Faction Square")
     try:
-        await mapUpdate(faction.casefold(),square,sid)
+        await mapUpdate(faction.casefold(),square,guild)
     except (KeyError,IndexError):
         await ctx.message.add_reaction("❌")
         return
-    await ctx.send(f"Map updated. https://www.hivewiki.de/kingfisher/map_{sid}/map.png?nocaching={cacher}")
+    await ctx.send(f"Map updated. https://www.hivewiki.de/kingfisher/map_{guild}/map.png?nocaching={cacher}")
 
 
 @bot.command(description="Bullying.",hidden=True)
@@ -1193,60 +1232,67 @@ async def calc(ctx,formula):
     await ctx.send(f"`{formula}`= {eval(formula)}") #using eval is quite unsafe
 
 
-#gh_factions
+#rp_factions
 @bot.group(description="Add factions to the list of factions available to mapClaim",aliases=[])
 async def faction(ctx):
-    global gh_factions
+    global rp_factions
     if ctx.message.author.id not in owner:
         await ctx.send(f"Bzzt! Not authorized.")
         return
     if ctx.invoked_subcommand is None:
-        with open(f"gh_factions.yaml",mode="r+") as f:
-            gh_factions=yaml.load(f)
-            gh_factions=dict(gh_factions) #YAML can't handle tuples, so we have convert back
-            for k in gh_factions:
-                gh_factions[k]=tuple(gh_factions[k])
-        print(gh_factions)
+        try:
+            with open(f"rp_factions.yaml",mode="r+") as f:
+                rp_factions=yaml.load(f)
+                rp_factions=dict(rp_factions) #YAML can't handle tuples, so we have convert back
+                for guilds in rp_factions:
+                    for k in guilds:
+                        guilds[k]=tuple(guilds[k])
+                print(rp_factions)
+        except:
+            print("Error when loading factions file.")
     await ctx.send(f"Faction list refreshed.")
 
 
-@faction.command(description="Prints the gh_factions variable to the console.",aliases=[],hidden=True)
+@faction.command(description="Prints the rp_factions variable to the console.",aliases=[],hidden=True)
 async def check(ctx):
-    print(gh_factions)
+    print(rp_factions)
 
 
 @faction.command(description="Colour should be in discord (hex) format", aliases=[],hidden=True)
 async def add(ctx,name,color):
+    guild=await sid(ctx.message.guild.id)
     if ctx.message.author.id not in owner:
         await ctx.send(f"Bzzt! Not authorized.")
         return
-    global gh_factions
-    for k in gh_factions:
-        if k==name:
-            await ctx.send(f"Name already taken!")
-            return
-    gh_factions[name.casefold()]=ImageColor.getrgb(color)
-    print(gh_factions)
-    with open(f"gh_factions.yaml",mode="w+") as f:
+    global rp_factions
+    for guilds in rp_factions:
+        for k in guilds:
+            if k==name:
+                await ctx.send(f"Name already taken!")
+                return
+    rp_factions[guild][name.casefold()]=ImageColor.getrgb(color)
+    print(rp_factions[guild])
+    with open(f"rp_factions.yaml",mode="w+") as f:
         f.seek(0)
-        yaml.dump(gh_factions,f)
+        yaml.dump(rp_factions,f)
     await ctx.send(f"Successfully added **{name}** to faction list.")
 
 
 @faction.command(description="Removes a faction", aliases=[],hidden=True)
 async def remove(ctx,name):
+    guild=await sid(ctx.message.guild.id)
     if ctx.message.author.id not in owner:
         await ctx.send(f"Bzzt! Not authorized.")
         return
-    global gh_factions
-    for k in gh_factions:
+    global rp_factions
+    for k in rp_factions[guild]:
         if k==name:
-            del gh_factions[k]
+            del rp_factions[guild][k]
             await ctx.send(f"Removed {k}.")
-    print(gh_factions)
-    with open(f"gh_factions.yaml",mode="w+") as f:
+    print(rp_factions[guild])
+    with open(f"rp_factions.yaml",mode="w+") as f:
         f.seek(0)
-        yaml.dump(gh_factions,f)
+        yaml.dump(rp_factions,f)
 
 
 @bot.command(name="time",description="Stuck in bubble hell? Wonder when giao will be back?")
@@ -1868,7 +1914,7 @@ async def roll(ctx,formula="default",*comment):
     #print(repeats)
     #print(dice)
     #print(i)
-    if (repeats>10e3) or (dice>10e3) or (i>10e3):
+    if (repeats>10e3) or (dice>10e7) or (i>10e3):
         await ctx.send("BRB, driving to the dice store. Oh no, looks like they're all out of dice, just like I am of fucks to give about your spammy rolls.")
         return
     for j in range(0,repeats):

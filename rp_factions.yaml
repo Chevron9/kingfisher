@@ -1,0 +1,16 @@
+gh:
+  neutral: &id001
+  - 255
+  - 255
+  - 255
+  independent: &id002
+  - 163
+  - 145
+  - 108
+dh:
+  neutral: *id001
+  independent: *id002
+  orcs:
+  - 250
+  - 16
+  - 12

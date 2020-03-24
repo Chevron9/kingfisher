@@ -110,6 +110,7 @@ luck/
 rolls/
 serverfiles/
 debugging/
+archives/
 map_gh/backup
 .vscode/
 reminders.txt
@@ -119,3 +120,5 @@ decay*
 glicko*
 bm.yaml
 .flake8
+pickle_gen.py
+reminders.kf

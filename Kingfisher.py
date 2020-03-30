@@ -478,7 +478,7 @@ async def on_message(message):
                 if message.author not in usrs:
                     await message.channel.send(f"{message.author.mention}: Think you're above the rules, huh? Read the pins, you illiterate baboon. Denied.")
                     await message.delete()
-            elif fools: #april fools, enforce entity-speak ("AGREEMENT.")
+            elif fools==True: #april fools, enforce entity-speak ("AGREEMENT.")
                 if (message.channel.id==435874236297379861) or (message.channel.id==465651565089259523) or (message.channel.id==478240151987027978):
                     speak=message.content
                     #make sure we don't delete pings
@@ -492,7 +492,9 @@ async def on_message(message):
                     for _,j in n_match:
                         if j not in ["CD", "NN", "NNS", "NNP", "NNPS","VB"]:
                             deletion_trigger= True
-                            reason+="Nouns only! \n"
+                    
+                    if  deletion_trigger== True:
+                        reason+="Nouns only! \n"
                    
                     if not p_match.isupper():
                         deletion_trigger= True
@@ -1395,10 +1397,12 @@ async def _time(ctx,):
 @commands.check(gm_only)
 async def fools(ctx):
     global fools
-    if fools:
+    if fools==True:
         fools=False
+        await ctx.send("Disabled.")
     else:
         fools=True
+        await ctx.send("Enabled.")
 
 
 @bot.command(description="Saves a copy of the channel on the hivewiki server.")

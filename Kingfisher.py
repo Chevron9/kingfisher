@@ -6,6 +6,7 @@ import datetime
 import json
 import logging
 import math
+import nltk
 import operator
 import os
 import pickle
@@ -100,6 +101,7 @@ sPlanner = sched.scheduler(time.time, time.sleep) # class sched.scheduler(timefu
 #global variables
 #################
 macros={}
+fools=False
 
 #Map path, used for claim image editing
 rp_areas = {"gh":[(330.00,352.00),(412.00,226.00),(724.00,224.00),(688.00,350.00),(842.00,386.00),(936.00,212.00),(1164.00,410.00),(1300.00,214.00),(1424.00,160.00),
@@ -226,8 +228,6 @@ async def on_ready():
 
     with open(f"rp_factions.yaml",mode="r+") as f:
         rp_factions=yaml.load(f)
-        #rp_factions=repr(dict(rp_factions))
-        print(rp_factions)
         rp_factions=dict(rp_factions) #YAML can't handle tuples, so we have convert back
         for guilds in rp_factions:
             rp_factions[guilds]=dict(rp_factions[guilds]) #we're also getting rid of all these fucki-annoying ordereddicts
@@ -440,7 +440,7 @@ async def on_member_remove(member):
 async def on_message(message):
     #function for having private chats people can declare stuff into
     #deletes the postings in one channel, then sends them to a different one
-
+    global fools
     try:
         #checks-public 587718887936753710
         #checks-private 587718930483773509
@@ -459,6 +459,13 @@ async def on_message(message):
                 target=discord.utils.find(lambda m:m.id==587718930483773509,message.guild.channels)
                 await target.send(f"**{message.content}** sent by {message.author.name}, ID `{message.author.id}` at {message.created_at}")
                 await message.delete()
+            
+            #declare public for duskhaven
+            elif message.channel.id==694012416639369297:
+                target=discord.utils.find(lambda m:m.id==694012447002066995,message.guild.channels)
+                await target.send(f"**{message.content}** sent by {message.author.name}, ID `{message.author.id}` at {message.created_at}")
+                await message.delete()
+            
             #private-talk
             elif message.channel.id==603035662018543618:
                 target=discord.utils.find(lambda m:m.id==614168400523952181,message.guild.channels)
@@ -471,7 +478,45 @@ async def on_message(message):
                 if message.author not in usrs:
                     await message.channel.send(f"{message.author.mention}: Think you're above the rules, huh? Read the pins, you illiterate baboon. Denied.")
                     await message.delete()
+            elif fools: #april fools, enforce entity-speak ("AGREEMENT.")
+                if (message.channel.id==435874236297379861) or (message.channel.id==465651565089259523) or (message.channel.id==478240151987027978):
+                    speak=message.content
+                    #make sure we don't delete pings
+                    p_pattern=re.compile("<@(!|&)\d+>")
+                    p_match=p_pattern.sub("",speak)
+                    #Make sure the message contains only nouns
+                    n_match=nltk.tag.pos_tag(p_match.split())
+                    
+                    reason="Message deleted. Remember: \n"
+                    #CD NN NNS NNP NNPS
+                    for _,j in n_match:
+                        if j not in ["CD", "NN", "NNS", "NNP", "NNPS","VB"]:
+                            deletion_trigger= True
+                            reason+="Nouns only! \n"
+                   
+                    if not p_match.isupper():
+                        deletion_trigger= True
+                        reason+="Caps only! \n"
 
+                    if p_match[-1]!=".":
+                        deletion_trigger= True
+                        reason+="Full stop at the end only! \n"
+
+                    len_split=p_match.split()
+                    len_split=len(len_split)
+                    if (len_split>1):
+                        print("1 word deletion triggered")
+                        deletion_trigger= True
+                        reason+="One word only! \n"
+                    
+                    if deletion_trigger:
+                        try:
+                            await message.author.send(reason)
+                        except Exception as e: print(e)
+
+                        await message.delete()
+                        
+                        
             #custom messages. Mostly jokes.
             elif message.content==("DOCTOR NEFARIOUS"):
                 await message.channel.send("🍋")
@@ -1345,6 +1390,15 @@ async def _time(ctx,):
     embed.add_field(name=f"Canberra {aussies_dt.strftime(fmt_offset)}", value=aussies_dt.strftime(fmt), inline=True)
 
     await ctx.send(embed=embed)
+
+@bot.command(description="Let the fun begin.")
+@commands.check(gm_only)
+async def fools(ctx):
+    global fools
+    if fools:
+        fools=False
+    else:
+        fools=True
 
 
 @bot.command(description="Saves a copy of the channel on the hivewiki server.")

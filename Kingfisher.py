@@ -435,6 +435,13 @@ async def on_member_remove(member):
     if (server=="gh") or (server=="test"):
         await own.send(f"{member.name} left {member.guild.name}")
 
+@bot.event
+async def on_message_edit(before,after):
+    global fools
+    if fools==True: #april fools, enforce entity-speak ("AGREEMENT.")
+        if (after.channel.id==435874236297379861) or (after.channel.id==465651565089259523) or (after.channel.id==478240151987027978):
+            await after.delete()
+
 
 @bot.event
 async def on_message(message):
@@ -454,7 +461,7 @@ async def on_message(message):
         #test-dev 435874236297379861
         if not_me(message):
             #declare-public
-            #TODO: change this to embeds!
+            #TODO: change this to embeds!/make it pretty
             if message.channel.id==587718887936753710:
                 target=discord.utils.find(lambda m:m.id==587718930483773509,message.guild.channels)
                 await target.send(f"**{message.content}** sent by {message.author.name}, ID `{message.author.id}` at {message.created_at}")
@@ -478,36 +485,71 @@ async def on_message(message):
                 if message.author not in usrs:
                     await message.channel.send(f"{message.author.mention}: Think you're above the rules, huh? Read the pins, you illiterate baboon. Denied.")
                     await message.delete()
-            elif fools==True: #april fools, enforce entity-speak ("AGREEMENT.")
-                if (message.channel.id==435874236297379861) or (message.channel.id==465651565089259523) or (message.channel.id==478240151987027978):
+        if fools==True: #april fools, enforce entity-speak ("AGREEMENT.")
+            if (message.channel.id==435874236297379861) or (message.channel.id==465651565089259523) or (message.channel.id==478240151987027978):
+                try:
+                    deletion_trigger=False
+                    reason_caps=False
+                    reason="Message deleted. Remember: \n"
+
+                    counter=0
+                    async for old_message in message.channel.history(limit=2):
+                        print("old message: "+old_message.content)
+                        counter+=1
+                        if old_message.author==message.author and counter==2:
+                            deletion_trigger=True
+                            reason+="No consecutive messages!\n"
+                    print("channel: "+message.channel.name)
+                    print(message.author.name)
                     speak=message.content
+                    print("**** speak: "+speak)
+                    
+                    if message.attachments:
+                        await message.delete()
+                    
                     #make sure we don't delete pings
                     p_pattern=re.compile("<@(!|&)\d+>")
                     p_match=p_pattern.sub("",speak)
+                    print("p_match: "+p_match)
                     #Make sure the message contains only nouns
                     n_match=nltk.tag.pos_tag(p_match.split())
+                    print(n_match)
+                    #if p_match==speak:
+                    #    deletion_trigger=True
                     
-                    reason="Message deleted. Remember: \n"
+                    punctuation=["-","'","_"]
+                    if any(e in p_match for e in punctuation):
+                        await message.delete()
+
+
                     #CD NN NNS NNP NNPS
-                    for _,j in n_match:
+                    for i,j in n_match:
+                        print(i+","+j)
                         if j not in ["CD", "NN", "NNS", "NNP", "NNPS","VB"]:
                             deletion_trigger= True
                     
                     if  deletion_trigger== True:
                         reason+="Nouns only! \n"
-                   
-                    if not p_match.isupper():
-                        deletion_trigger= True
-                        reason+="Caps only! \n"
 
+                    print(speak)
                     if p_match[-1]!=".":
                         deletion_trigger= True
                         reason+="Full stop at the end only! \n"
 
-                    len_split=p_match.split()
-                    len_split=len(len_split)
+                    print("p_match: "+p_match)
+                    for i in p_match[:-1]:
+                        #print("i: "+i)
+                        if not (i.isupper() or i==" "):
+                            deletion_trigger= True
+                            reason_caps=True
+                    if reason_caps==True:
+                        reason+="Caps only! \n"
+                        
+
+                    len_split=p_pattern.sub("",speak)
+                    len_split=len(len_split.split())
                     if (len_split>1):
-                        print("1 word deletion triggered")
+                        #print("1 word deletion triggered")
                         deletion_trigger= True
                         reason+="One word only! \n"
                     
@@ -517,6 +559,11 @@ async def on_message(message):
                         except Exception as e: print(e)
 
                         await message.delete()
+                        print("DELETED")
+                    print("------------------------")
+                except:
+                    print("April failed:", sys.exc_info())
+                    raise
                         
                         
             #custom messages. Mostly jokes.
@@ -689,6 +736,7 @@ async def die(ctx):
     if ctx.message.author.id not in owner:
         await ctx.send("No. Fuck off.")
         return
+
     global b_task
     global b_task2
     b_task.cancel()
@@ -1346,6 +1394,29 @@ async def remove(ctx,name):
         f.seek(0)
         yaml.dump(rp_factions,f)
 
+@bot.command(description="Manually increment accounts.")
+async def dh_increment(ctx,):
+    loc=ctx.message.guild.id
+
+    if not (ctx.author==242389360320839681 or ctx.author==138340069311381505):
+        await ctx.send("Not authorized.")
+        return
+    MF_channel = bot.get_channel(691369881039536178) #MF imperial-bank-of-dusthaven
+    #test_channel=bot.get_channel(435874236297379861) #nest test-dev
+    #691221976311660595
+
+    if os.path.isfile(f"cash{loc}.txt"):
+        print("Cash file exists")
+        with open(f"cash{loc}.txt",mode="r+") as g:
+            accounts = json.load(g)
+            g.seek(0)
+            g.truncate()
+            for i in accounts:
+                i[1]=i[1]+(i[2])
+            json.dump(accounts,g)
+        await MF_channel.send(f"Income computed.")    
+    else:
+        await ctx.send(f"No accounts on file.")
 
 @bot.command(name="time",description="Stuck in bubble hell? Wonder when giao will be back?")
 async def _time(ctx,):
@@ -1400,9 +1471,11 @@ async def fools(ctx):
     if fools==True:
         fools=False
         await ctx.send("Disabled.")
+        print(fools)
     else:
         fools=True
         await ctx.send("Enabled.")
+        print(fools)
 
 
 @bot.command(description="Saves a copy of the channel on the hivewiki server.")
@@ -2252,7 +2325,10 @@ async def start(ctx):
 async def end(ctx, force=False,invoked=False,): #start=False
 
     chan=ctx.channel.id
-    cur_turn=turn_tracker[chan]["turn"]
+    if chan in turn_tracker:
+        cur_turn=turn_tracker[chan]["turn"]
+    else:
+        await ctx.send("No fight saved. If you were in a fight, the bot might just have restarted.")
     rem_turn=cur_turn
     cur_round=turn_tracker[chan]["round"]
     #print(f"end: cur_turn {cur_turn} cur_round {cur_round}")
@@ -2820,6 +2896,7 @@ async def income(ctx,cape, amount):
         f.seek(0)
         f.truncate()
         json.dump(accounts,f)
+
 
 
 async def account_decay():

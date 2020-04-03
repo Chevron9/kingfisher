@@ -1398,7 +1398,7 @@ async def remove(ctx,name):
 async def dh_increment(ctx,):
     loc=ctx.message.guild.id
 
-    if not (ctx.author==242389360320839681 or ctx.author==138340069311381505):
+    if not (ctx.author.id==242389360320839681 or ctx.author.id==138340069311381505):
         await ctx.send("Not authorized.")
         return
     MF_channel = bot.get_channel(691369881039536178) #MF imperial-bank-of-dusthaven
@@ -2903,7 +2903,7 @@ async def account_decay():
     await asyncio.sleep(60*1) #make sure the bot is initialized - this can be fixed better.
     while True:
 
-        locs=[465651565089259521,457290411698814980,691221976311660595] #testing 434729592352276480
+        locs=[465651565089259521,457290411698814980,] #testing 434729592352276480
         #The servers that money decay and income is enabled for.
         #Currently Grand Haven 465651565089259521 and WD LA 457290411698814980
         # duskhaven 691221976311660595

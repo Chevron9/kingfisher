@@ -566,13 +566,13 @@ async def on_message(message):
                     raise
                         
                         
-            #custom messages. Mostly jokes.
-            elif message.content==("DOCTOR NEFARIOUS"):
-                await message.channel.send("🍋")
-            elif message.content==("Kingfisher, play Despacito"):
-                await message.channel.send("ɴᴏᴡ ᴘʟᴀʏɪɴɢ: Despacito \n ───────────────⚪─────────────────── \n  ◄◄⠀▐▐ ⠀►►⠀⠀ ⠀ 1:17 / 3:48 ⠀ ───○ 🔊⠀ ᴴᴰ ⚙ ❐ ⊏⊐")
-            elif message.content==("F"):
-                await message.channel.send("f")
+        #custom messages. Mostly jokes.
+        if message.content==("DOCTOR NEFARIOUS"):
+            await message.channel.send("🍋")
+        elif message.content==("Kingfisher, play Despacito"):
+            await message.channel.send("ɴᴏᴡ ᴘʟᴀʏɪɴɢ: Despacito \n ───────────────⚪─────────────────── \n  ◄◄⠀▐▐ ⠀►►⠀⠀ ⠀ 1:17 / 3:48 ⠀ ───○ 🔊⠀ ᴴᴰ ⚙ ❐ ⊏⊐")
+        elif message.content==("F"):
+            await message.channel.send("f")
 
         await bot.process_commands(message)
 
@@ -597,7 +597,7 @@ async def on_command_error(context, exception):
             await context.send(exception)
 
         if not type(exception)==discord.ext.commands.errors.CommandNotFound:
-            print('Ignoring exception in command {}:'.format(context.command), file=sys.stderr)
+            print('Channel: {context.message.channel.name} - Ignoring exception in command {}:'.format(context.command), file=sys.stderr)
             traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
 
 
@@ -2329,6 +2329,7 @@ async def end(ctx, force=False,invoked=False,): #start=False
         cur_turn=turn_tracker[chan]["turn"]
     else:
         await ctx.send("No fight saved. If you were in a fight, the bot might just have restarted.")
+        return
     rem_turn=cur_turn
     cur_round=turn_tracker[chan]["round"]
     #print(f"end: cur_turn {cur_turn} cur_round {cur_round}")
@@ -2463,7 +2464,7 @@ async def kick(ctx,*user):
             turn_tracker[chan]["order"].remove(i)
             turn_tracker[chan]["turn"]-=1
             await ctx.send(f"<@!{usr.id}> has been removed on Turn {turn_tracker[chan]['turn']}, Round {turn_tracker[chan]['round']}")
-            await ctx.invoke(end,"True",True)
+            #await ctx.invoke(end,"True",True)
             return
 
 

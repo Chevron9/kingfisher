@@ -29,32 +29,29 @@ from discord.ext import commands
 from discord.ext.commands import Bot, Cog
 from oauth2client.service_account import ServiceAccountCredentials
 from PIL import Image, ImageDraw, ImageColor
-from pytz import timezone
 from ruamel.yaml import YAML
 from operator import itemgetter
 
 version = "0.2.4 Archivist"
 
-#TODO: add self-tagging, servers
-#TODO: ranking rework
-#TODO: add server configuration
-#TODO: migrate to db
+
+# TODO: add self-tagging, servers
+# TODO: ranking rework
+# TODO: add server configuration
+# TODO: migrate to db
 
 clientloop = asyncio.new_event_loop()
 asyncio.set_event_loop(clientloop)
 owner = [138340069311381505]  # hyper#4131
 gms= []
 
-stdlogger = logging.basicConfig(level=logging.INFO) #ignore
-#https://github.com/Rapptz/discord.py/search?q=on_command_error&unscoped_q=on_command_error
+stdlogger = logging.basicConfig(level=logging.INFO)
+# https://github.com/Rapptz/discord.py/search?q=on_command_error&unscoped_q=on_command_error
 logger = logging.getLogger('discord')
 logger.setLevel(logging.INFO)
 handler = logging.FileHandler(filename=f'discordTEST.log', encoding='utf-8', mode='a')
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
-
-# pylint suppressions
-# pylint: disable=E0102, W1401
 
 # Setup the Sheets API
 scope = ['https://spreadsheets.google.com/feeds',
@@ -64,7 +61,7 @@ credentials = ServiceAccountCredentials.from_json_keyfile_name('gspread.json', s
 gc = gspread.authorize(credentials)
 
 feed=[[],[],[]]
-#kingfisher reference doc
+# kingfisher reference doc
 with open("Reference.txt", 'r') as f:
         reference=f.read()
 RefSheet = gc.open_by_key(reference) # kf reference doc
@@ -102,6 +99,8 @@ sPlanner = sched.scheduler(time.time, time.sleep) # class sched.scheduler(timefu
 #################
 macros={}
 fools=False
+b_task=None
+b_task2=None
 
 #Map path, used for claim image editing
 rp_areas = {"gh":[(330.00,352.00),(412.00,226.00),(724.00,224.00),(688.00,350.00),(842.00,386.00),(936.00,212.00),(1164.00,410.00),(1300.00,214.00),(1424.00,160.00),
@@ -112,42 +111,42 @@ rp_areas = {"gh":[(330.00,352.00),(412.00,226.00),(724.00,224.00),(688.00,350.00
             (1034.00,1320.00),(1218.00,1402.00),(1312.00,1046.00),(1488.00,1058.00),(1646.00,1326.00),(1456.00,1288.00),(1392.00,1406.00),(1044.00,1428.00),(824.00,1406.00),
             (576.00,1430.00),(486.00,1512.00),(420.00,1402.00),(426.00,1528.00),(606.00,1652.00),(890.00,1664.00),(1096.00,1646.00),(1260.00,1640.00),(1440.00,1624.50),(1489.50,1438.50),
             (1608.00,1599.00)],
-            "dh":[(213.00,67.50),
-            (106.50,216.00),
-            (63.00,525.00),
-            (90.00,760.50),
-            (253.50,610.50),
-            (297.00,456.00),
-            (313.50,327.00),
-            (288.00,211.50),
-            (498.00,85.50),
-            (508.50,202.50),
-            (564.00,471.00),
-            (634.50,676.50),
-            (769.50,793.50),
-            (775.50,589.50),
-            (736.50,457.50),
-            (711.00,253.50),
-            (709.50,76.50),
-            (912.00,96.00),
-            (943.50,285.00),
-            (885.00,442.50),
-            (1024.50,486.00),
-            (1006.50,655.50),
-            (912.00,838.50),
-            (1087.50,886.50),
-            (1206.00,750.00),
-            (1219.50,619.50),
-            (1200.00,462.00),
-            (1137.00,336.00),
-            (1075.50,180.00),
-            (1294.50,184.50),
-            (1420.50,238.50),
-            (1224.00,355.50),
-            (1408.50,370.50),
-            (1432.50,540.00),
-            (1449.00,690.00),
-            (1422.00,985.50)]}
+            "dh":  [(213.00,67.50),
+                    (106.50,216.00),
+                    (63.00,525.00),
+                    (90.00,760.50),
+                    (253.50,610.50),
+                    (297.00,456.00),
+                    (313.50,327.00),
+                    (288.00,211.50),
+                    (498.00,85.50),
+                    (508.50,202.50),
+                    (564.00,471.00),
+                    (634.50,676.50),
+                    (769.50,793.50),
+                    (775.50,589.50),
+                    (736.50,457.50),
+                    (711.00,253.50),
+                    (709.50,76.50),
+                    (912.00,96.00),
+                    (943.50,285.00),
+                    (885.00,442.50),
+                    (1024.50,486.00),
+                    (1006.50,655.50),
+                    (912.00,838.50),
+                    (1087.50,886.50),
+                    (1206.00,750.00),
+                    (1219.50,619.50),
+                    (1200.00,462.00),
+                    (1137.00,336.00),
+                    (1075.50,180.00),
+                    (1294.50,184.50),
+                    (1420.50,238.50),
+                    (1224.00,355.50),
+                    (1408.50,370.50),
+                    (1432.50,540.00),
+                    (1449.00,690.00),
+                    (1422.00,985.50)]}
 
 typ_colours = {"Bash":0x0137f6,"Pierce":0xffa500,"Cut":0xb22649,"Freeze":0x00ecff,"Shock":0xd6ff00,"Rend":0x9937a5,"Burn":0x0fe754, "Poison":0x334403,
                "Armor":0x565759,"Engine":0x565759,"Wheel":0x565759,"System":0x565759,"Structural":0x565759}
@@ -199,7 +198,7 @@ async def on_ready():
                 channel=bot.get_channel(i["channel"])
                 try:
                     sPlanner.enterabs(i["timer"], 10, asyncio.run_coroutine_threadsafe,
-                                    argument=(channel.send(i["reactlist"],embed=i["embed"]),loop,), kwargs={})
+                                      argument=(channel.send(i["reactlist"],embed=i["embed"]),loop,), kwargs={})
                 except AttributeError:
                     print(i.embed.description)
         except FileNotFoundError:
@@ -435,10 +434,11 @@ async def on_member_remove(member):
     if (server=="gh") or (server=="test"):
         await own.send(f"{member.name} left {member.guild.name}")
 
+
 @bot.event
 async def on_message_edit(before,after):
     global fools
-    if fools==True: #april fools, enforce entity-speak ("AGREEMENT.")
+    if fools: #april fools, enforce entity-speak ("AGREEMENT.")
         if (after.channel.id==435874236297379861) or (after.channel.id==465651565089259523) or (after.channel.id==478240151987027978):
             await after.delete()
 
@@ -447,7 +447,6 @@ async def on_message_edit(before,after):
 async def on_message(message):
     #function for having private chats people can declare stuff into
     #deletes the postings in one channel, then sends them to a different one
-    global fools
     try:
         #checks-public 587718887936753710
         #checks-private 587718930483773509
@@ -466,13 +465,13 @@ async def on_message(message):
                 target=discord.utils.find(lambda m:m.id==587718930483773509,message.guild.channels)
                 await target.send(f"**{message.content}** sent by {message.author.name}, ID `{message.author.id}` at {message.created_at}")
                 await message.delete()
-            
+
             #declare public for duskhaven
             elif message.channel.id==694012416639369297:
                 target=discord.utils.find(lambda m:m.id==694012447002066995,message.guild.channels)
                 await target.send(f"**{message.content}** sent by {message.author.name}, ID `{message.author.id}` at {message.created_at}")
                 await message.delete()
-            
+
             #private-talk
             elif message.channel.id==603035662018543618:
                 target=discord.utils.find(lambda m:m.id==614168400523952181,message.guild.channels)
@@ -485,7 +484,9 @@ async def on_message(message):
                 if message.author not in usrs:
                     await message.channel.send(f"{message.author.mention}: Think you're above the rules, huh? Read the pins, you illiterate baboon. Denied.")
                     await message.delete()
-        if fools==True: #april fools, enforce entity-speak ("AGREEMENT.")
+
+        global fools
+        if fools: #april fools, enforce entity-speak ("AGREEMENT.")
             if (message.channel.id==435874236297379861) or (message.channel.id==465651565089259523) or (message.channel.id==478240151987027978):
                 try:
                     deletion_trigger=False
@@ -494,7 +495,7 @@ async def on_message(message):
 
                     counter=0
                     async for old_message in message.channel.history(limit=2):
-                        print("old message: "+old_message.content)
+                        #print("old message: "+old_message.content)
                         counter+=1
                         if old_message.author==message.author and counter==2:
                             deletion_trigger=True
@@ -503,32 +504,31 @@ async def on_message(message):
                     print(message.author.name)
                     speak=message.content
                     print("**** speak: "+speak)
-                    
+
                     if message.attachments:
                         await message.delete()
-                    
+
                     #make sure we don't delete pings
                     p_pattern=re.compile("<@(!|&)\d+>")
                     p_match=p_pattern.sub("",speak)
-                    print("p_match: "+p_match)
+                    #print("p_match: "+p_match)
                     #Make sure the message contains only nouns
                     n_match=nltk.tag.pos_tag(p_match.split())
-                    print(n_match)
+                    #print(n_match)
                     #if p_match==speak:
                     #    deletion_trigger=True
-                    
+
                     punctuation=["-","'","_"]
                     if any(e in p_match for e in punctuation):
                         await message.delete()
-
 
                     #CD NN NNS NNP NNPS
                     for i,j in n_match:
                         print(i+","+j)
                         if j not in ["CD", "NN", "NNS", "NNP", "NNPS","VB"]:
                             deletion_trigger= True
-                    
-                    if  deletion_trigger== True:
+
+                    if deletion_trigger:
                         reason+="Nouns only! \n"
 
                     print(speak)
@@ -542,9 +542,8 @@ async def on_message(message):
                         if not (i.isupper() or i==" "):
                             deletion_trigger= True
                             reason_caps=True
-                    if reason_caps==True:
+                    if reason_caps:
                         reason+="Caps only! \n"
-                        
 
                     len_split=p_pattern.sub("",speak)
                     len_split=len(len_split.split())
@@ -552,11 +551,12 @@ async def on_message(message):
                         #print("1 word deletion triggered")
                         deletion_trigger= True
                         reason+="One word only! \n"
-                    
+
                     if deletion_trigger:
                         try:
                             await message.author.send(reason)
-                        except Exception as e: print(e)
+                        except Exception as e:
+                            print(e)
 
                         await message.delete()
                         print("DELETED")
@@ -564,8 +564,7 @@ async def on_message(message):
                 except:
                     print("April failed:", sys.exc_info())
                     raise
-                        
-                        
+
         #custom messages. Mostly jokes.
         if message.content==("DOCTOR NEFARIOUS"):
             await message.channel.send("🍋")
@@ -1157,6 +1156,7 @@ async def add(ctx,title,comment=None,url=None):
         yaml.dump(bm_feed,f)
     await ctx.message.add_reaction("✅")
 
+
 #TODO: fix this
 @bookmark.command(description="""Remove links from your bookmark. Use this CAREFULLY!
                                 If you have multiple entries with the same comment, you *should* specify exactly which one should get deleted by also
@@ -1394,6 +1394,7 @@ async def remove(ctx,name):
         f.seek(0)
         yaml.dump(rp_factions,f)
 
+
 @bot.command(description="Manually increment accounts.")
 async def dh_increment(ctx,):
     loc=ctx.message.guild.id
@@ -1414,9 +1415,10 @@ async def dh_increment(ctx,):
             for i in accounts:
                 i[1]=i[1]+(i[2])
             json.dump(accounts,g)
-        await MF_channel.send(f"Income computed.")    
+        await MF_channel.send(f"Income computed.")
     else:
         await ctx.send(f"No accounts on file.")
+
 
 @bot.command(name="time",description="Stuck in bubble hell? Wonder when giao will be back?")
 async def _time(ctx,):
@@ -1464,18 +1466,17 @@ async def _time(ctx,):
 
     await ctx.send(embed=embed)
 
+
 @bot.command(description="Let the fun begin.")
 @commands.check(gm_only)
-async def fools(ctx):
+async def toggleFool(ctx):
     global fools
-    if fools==True:
+    if fools:
         fools=False
         await ctx.send("Disabled.")
-        print(fools)
     else:
         fools=True
         await ctx.send("Enabled.")
-        print(fools)
 
 
 @bot.command(description="Saves a copy of the channel on the hivewiki server.")
@@ -2899,7 +2900,6 @@ async def income(ctx,cape, amount):
         json.dump(accounts,f)
 
 
-
 async def account_decay():
     await asyncio.sleep(60*1) #make sure the bot is initialized - this can be fixed better.
     while True:
@@ -2948,7 +2948,7 @@ async def account_decay():
                             if loc==457290411698814980:
                                 await LA_channel.send(f"Daily Expenses computed. Total accrued wealth: {wealth}$")
                             if loc==691221976311660595:
-                                await MF_channel.send(f"Daily Income computed.")    
+                                await MF_channel.send(f"Daily Income computed.")
                             #if loc==434729592352276480:
                             #      print(test_channel)
                             #      await test_channel.send("henlo")

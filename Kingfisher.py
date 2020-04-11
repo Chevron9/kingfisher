@@ -596,7 +596,7 @@ async def on_command_error(context, exception):
             await context.send(exception)
 
         if not type(exception)==discord.ext.commands.errors.CommandNotFound:
-            print('Channel: {context.message.channel.name} - Ignoring exception in command {}:'.format(context.command), file=sys.stderr)
+            print(f'Channel: {context.message.channel.name} \n Server: {context.guildname} \n Ignoring exception in command {context.command}:', file=sys.stderr)
             traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
 
 
@@ -1922,10 +1922,213 @@ async def show(ctx,title=None,user=None):
 
 
 @bot.command(description="See >tag roll for help",aliases=["nr"])
-async def newroll(ctx,):
-    d20=random.randint(1,20)
-    d6=random.randint(1,6)
-    await ctx.send(f"{d20}+{d6}={d20+d6}")
+async def newroll(ctx,formula="default",*comment):
+    loc=ctx.message.guild.id
+    s_id = await sid(loc)
+
+    if formula[0]=="$":
+        user=str(ctx.message.author.id)
+        if formula in macros[user]:
+            for i in macros[user][formula]:
+                if "#" in i:
+                    form=i.split("#")
+                    await ctx.invoke(roll,form[0]," ".join(form[1:]))
+                else:
+                    await ctx.invoke(roll,formula=i)
+        return
+    formula_in=formula
+
+    if comment==():
+        comment=""
+    if formula[0]=="#":
+        comment2=(formula[1:],)
+        if comment!="":
+            comment=comment2+comment
+        else:
+            comment=comment2
+        formula="default"
+
+    if (s_id=="portland") and (formula=="default"):
+        formula="1d6"
+    elif formula=="default":
+        formula="1d20+1d6"
+    modifier=0
+    if "d" in formula.casefold():
+        d_pattern=re.compile("(d|D)(\d)*")
+        d_match=d_pattern.search(formula)
+        print("d_match "+d_match)
+        if d_match.group()[0]=="D":
+            keep=False
+        else:
+            keep=True
+        dice=int(d_match.group()[1:])
+    else:
+        if "c" in formula.casefold():
+            dice=10
+            modifier=5
+            keep=True
+        else:
+            if (s_id=="portland"):
+                dice=6
+            else:
+                dice=20
+            keep=True
+    #print(f"dice: {dice}")
+
+    if ("+" in formula) or ("-" in formula):
+        if ("++" in formula) or ("--" in formula):
+            mod_pattern=re.compile("(\+\+|\-\-)(\d)*")
+            mod_match=mod_pattern.search(formula)
+            modifier=int(mod_match.group()[1:])
+            if "c" in formula.casefold():
+                modifier=5+modifier
+            else:
+                modifier=4+modifier
+        else:
+            mod_pattern=re.compile("(\+|\-)+(\d)*")
+            mod_match=mod_pattern.search(formula)
+            modifier=int(mod_match.group())
+    else:
+        if dice==20:
+            modifier=4+modifier
+    #print(f"modifier: {modifier}")
+
+    brief=False
+    if "b" in formula:
+        brief=True
+    if "x" in formula:
+        if "xb" in formula:
+            brief=True
+            x_pattern=re.compile("xb(\d)*")
+            x_match=x_pattern.search(formula)
+            if x_match:
+                repeats=int(x_match.group()[2:])
+        else:
+            brief=False
+            x_pattern=re.compile("x(\d)*")
+            x_match=x_pattern.search(formula)
+            if x_match:
+                repeats=int(x_match.group()[1:])
+    else:
+        repeats=1
+    #print(f"repeats: {repeats}")
+
+    i_pattern=re.compile("(\A)(\d)*")
+    i_match=i_pattern.search(formula)
+    if i_match:
+        try:
+            i=int(i_match.group())
+        except ValueError:
+            if dice==20:
+                if formula_in[0]=="d":
+                    if "d20" in formula_in:
+                        i=1
+                else:
+                    i=3
+            else:
+                i=1
+            #print("ValueError")
+    else:
+        print("i-error in roll!")
+        return
+    #print(f"die #s: {i}")
+
+    if "!" in formula:
+        explode=True
+    else:
+        explode=False
+
+    requester=ctx.message.author.name
+    out_roll=[f"{requester}: ("]
+
+    #print(repeats)
+    #print(dice)
+    #print(i)
+    if (repeats>10e3) or (dice>10e7) or (i>10e3):
+        await ctx.send("BRB, driving to the dice store. Oh no, looks like they're all out of dice, just like I am of fucks to give about your spammy rolls.")
+        return
+    for j in range(0,repeats):
+        if (j!=0):
+            out_roll.append(", (")
+        result=[]
+        for x in range(0,i):
+            result.append(random.randint(1,dice))
+        if explode is True:
+            loops=len(result)
+            k=0
+            while (k < loops):
+                #print(k)
+                if result[k]==dice:
+                    result.append(random.randint(1,dice))
+                    loops=len(result)
+                k=k+1
+                if k>100: #save us from infinite loops
+                    break
+        result_i= [int(i) for i in result]
+
+        if keep is True:
+            if "p" in formula:
+                highest=min(result_i)
+            else:
+                highest=max(result_i)
+        else:
+            highest=sum(result)
+        #print(keep)
+        if keep is True:
+            for x in range(0,len(result_i)):
+                if result_i[x]!=highest:
+                    if keep is True:
+                        out_roll.append("~~")
+                        out_roll.append(str(result_i[x]))
+                        out_roll.append("~~")
+                    else:
+                        out_roll.append(str(result_i[x]))
+                else:
+                    out_roll.append(str(result_i[x]))
+                if x!=len(result_i)-1:
+                    out_roll.append("+")
+        else:
+            highest=sum(result)
+            for x in range(0,len(result_i)):
+                    out_roll.append(str(result_i[x]))
+                    if x!=len(result_i)-1:
+                        out_roll.append("+")
+        out_roll.append(")")
+        if modifier>0:
+            out_roll.append("+")
+        if dice==highest:
+            if modifier != 0:
+                out_roll.append(f"{modifier}=__**{highest+modifier}**__")
+            else:
+                out_roll.append(f"=__**{highest+modifier}**__")
+        elif modifier==0:
+            out_roll.append(f"=**{highest}**")
+        else:
+            out_roll.append(f"{modifier}=**{highest+modifier}**")
+        #print(out_roll)
+    if brief is True:
+        out_saved=out_roll
+        out_roll=[f"{requester}: "]
+        brief_pattern=re.compile("\*\*-*\d+\*\*")
+        brief_match=brief_pattern.findall(''.join(out_saved))
+        for k in range(0,len(brief_match)):
+            if k==len(brief_match)-1:
+                critcheck=brief_match[k].replace("*","")
+                if (int(critcheck)-modifier)==dice:
+                    out_roll.append(f"__{brief_match[k]}__")
+                else:
+                    out_roll.append(f"{brief_match[k]}")
+            else:
+                critcheck=brief_match[k].replace("*","")
+                if (int(critcheck)-modifier)==dice:
+                    out_roll.append(f"__{brief_match[k]}__, ")
+                else:
+                    out_roll.append(f"{brief_match[k]}, ")
+    if comment!="":
+        if comment[0]=="#" and comment[1]=="#":
+            comment=comment[1:]
+        out_roll.append(f" #{' '.join(comment)}")
+    await ctx.send(''.join(out_roll))
 
 
 #dice rolling.

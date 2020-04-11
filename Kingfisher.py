@@ -596,7 +596,7 @@ async def on_command_error(context, exception):
             await context.send(exception)
 
         if not type(exception)==discord.ext.commands.errors.CommandNotFound:
-            print(f'Channel: {context.message.channel.name} \n Server: {context.guildname} \n Ignoring exception in command {context.command}:', file=sys.stderr)
+            print(f'Channel: {context.message.channel.name} \n Server: {context.guild.name} \n Ignoring exception in command {context.command}:', file=sys.stderr)
             traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
 
 
@@ -1956,7 +1956,7 @@ async def newroll(ctx,formula="default",*comment):
     if "d" in formula.casefold():
         d_pattern=re.compile("(d|D)(\d)*")
         d_match=d_pattern.search(formula)
-        print("d_match "+d_match)
+        print(f"d_match: {d_match}")
         if d_match.group()[0]=="D":
             keep=False
         else:

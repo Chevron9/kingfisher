@@ -1954,9 +1954,12 @@ async def newroll(ctx,formula="default",*comment):
         formula="1d20+1d6"
     modifier=0
     if "d" in formula.casefold():
-        d_pattern=re.compile("(d|D)(\d)*")
-        d_match=d_pattern.search(formula)
-        print(f"d_match: {d_match}")
+        d_pattern=re.compile(r"((?:d|D)\d+).")
+        d_match=d_pattern.finditer(formula)
+        s_match=d_pattern.split(formula)
+        print(f"s_match = {s_match}")
+        for i in d_match:  ##   CONTINUE HERE
+            print(f"d_match: {i}")
         if d_match.group()[0]=="D":
             keep=False
         else:

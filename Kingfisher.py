@@ -1954,17 +1954,24 @@ async def newroll(ctx,formula="default",*comment):
         formula="1d20+1d6"
     modifier=0
     if "d" in formula.casefold():
-        d_pattern=re.compile(r"((?:d|D)\d+).")
+        d_pattern=re.compile(r"((?:d|D)\d+)[^\+]*")
         d_match=d_pattern.finditer(formula)
-        s_match=d_pattern.split(formula)
-        print(f"s_match = {s_match}")
+        start=0
+        groups=[]
         for i in d_match:  ##   CONTINUE HERE
-            print(f"d_match: {i}")
-        if d_match.group()[0]=="D":
+            print(f"d_match_i: {i}")
+            extra=formula[start:i.end(0)]
+            if extra[0]=="+":
+                extra = extra[1:]
+            groups.append(extra)
+            print(f"groups: {groups}")
+            start=i.end(0)
+        
+        if "D" in formula:
             keep=False
         else:
             keep=True
-        dice=int(d_match.group()[1:])
+        #dice=int(d_match.group()[1:])
     else:
         if "c" in formula.casefold():
             dice=10
@@ -1977,161 +1984,162 @@ async def newroll(ctx,formula="default",*comment):
                 dice=20
             keep=True
     #print(f"dice: {dice}")
-
-    if ("+" in formula) or ("-" in formula):
-        if ("++" in formula) or ("--" in formula):
-            mod_pattern=re.compile("(\+\+|\-\-)(\d)*")
-            mod_match=mod_pattern.search(formula)
-            modifier=int(mod_match.group()[1:])
-            if "c" in formula.casefold():
-                modifier=5+modifier
-            else:
-                modifier=4+modifier
-        else:
-            mod_pattern=re.compile("(\+|\-)+(\d)*")
-            mod_match=mod_pattern.search(formula)
-            modifier=int(mod_match.group())
-    else:
-        if dice==20:
-            modifier=4+modifier
-    #print(f"modifier: {modifier}")
-
-    brief=False
-    if "b" in formula:
-        brief=True
-    if "x" in formula:
-        if "xb" in formula:
-            brief=True
-            x_pattern=re.compile("xb(\d)*")
-            x_match=x_pattern.search(formula)
-            if x_match:
-                repeats=int(x_match.group()[2:])
-        else:
-            brief=False
-            x_pattern=re.compile("x(\d)*")
-            x_match=x_pattern.search(formula)
-            if x_match:
-                repeats=int(x_match.group()[1:])
-    else:
-        repeats=1
-    #print(f"repeats: {repeats}")
-
-    i_pattern=re.compile("(\A)(\d)*")
-    i_match=i_pattern.search(formula)
-    if i_match:
-        try:
-            i=int(i_match.group())
-        except ValueError:
-            if dice==20:
-                if formula_in[0]=="d":
-                    if "d20" in formula_in:
-                        i=1
+    for formula in groups:
+        dice=int(d_match.group()[1:])
+        if ("+" in formula) or ("-" in formula):
+            if ("++" in formula) or ("--" in formula):
+                mod_pattern=re.compile("(\+\+|\-\-)(\d)*")
+                mod_match=mod_pattern.search(formula)
+                modifier=int(mod_match.group()[1:])
+                if "c" in formula.casefold():
+                    modifier=5+modifier
                 else:
-                    i=3
+                    modifier=4+modifier
             else:
-                i=1
-            #print("ValueError")
-    else:
-        print("i-error in roll!")
-        return
-    #print(f"die #s: {i}")
-
-    if "!" in formula:
-        explode=True
-    else:
-        explode=False
-
-    requester=ctx.message.author.name
-    out_roll=[f"{requester}: ("]
-
-    #print(repeats)
-    #print(dice)
-    #print(i)
-    if (repeats>10e3) or (dice>10e7) or (i>10e3):
-        await ctx.send("BRB, driving to the dice store. Oh no, looks like they're all out of dice, just like I am of fucks to give about your spammy rolls.")
-        return
-    for j in range(0,repeats):
-        if (j!=0):
-            out_roll.append(", (")
-        result=[]
-        for x in range(0,i):
-            result.append(random.randint(1,dice))
-        if explode is True:
-            loops=len(result)
-            k=0
-            while (k < loops):
-                #print(k)
-                if result[k]==dice:
-                    result.append(random.randint(1,dice))
-                    loops=len(result)
-                k=k+1
-                if k>100: #save us from infinite loops
-                    break
-        result_i= [int(i) for i in result]
-
-        if keep is True:
-            if "p" in formula:
-                highest=min(result_i)
-            else:
-                highest=max(result_i)
+                mod_pattern=re.compile("(\+|\-)+(\d)*")
+                mod_match=mod_pattern.search(formula)
+                modifier=int(mod_match.group())
         else:
-            highest=sum(result)
-        #print(keep)
-        if keep is True:
-            for x in range(0,len(result_i)):
-                if result_i[x]!=highest:
-                    if keep is True:
-                        out_roll.append("~~")
-                        out_roll.append(str(result_i[x]))
-                        out_roll.append("~~")
+            if dice==20:
+                modifier=4+modifier
+        #print(f"modifier: {modifier}")
+
+        brief=False
+        if "b" in formula:
+            brief=True
+        if "x" in formula:
+            if "xb" in formula:
+                brief=True
+                x_pattern=re.compile("xb(\d)*")
+                x_match=x_pattern.search(formula)
+                if x_match:
+                    repeats=int(x_match.group()[2:])
+            else:
+                brief=False
+                x_pattern=re.compile("x(\d)*")
+                x_match=x_pattern.search(formula)
+                if x_match:
+                    repeats=int(x_match.group()[1:])
+        else:
+            repeats=1
+        #print(f"repeats: {repeats}")
+
+        i_pattern=re.compile("(\A)(\d)*")
+        i_match=i_pattern.search(formula)
+        if i_match:
+            try:
+                i=int(i_match.group())
+            except ValueError:
+                if dice==20:
+                    if formula_in[0]=="d":
+                        if "d20" in formula_in:
+                            i=1
+                    else:
+                        i=3
+                else:
+                    i=1
+                #print("ValueError")
+        else:
+            print("i-error in roll!")
+            return
+        #print(f"die #s: {i}")
+
+        if "!" in formula:
+            explode=True
+        else:
+            explode=False
+
+        requester=ctx.message.author.name
+        out_roll=[f"{requester}: ("]
+
+        #print(repeats)
+        #print(dice)
+        #print(i)
+        if (repeats>10e3) or (dice>10e7) or (i>10e3):
+            await ctx.send("BRB, driving to the dice store. Oh no, looks like they're all out of dice, just like I am of fucks to give about your spammy rolls.")
+            return
+        for j in range(0,repeats):
+            if (j!=0):
+                out_roll.append(", (")
+            result=[]
+            for x in range(0,i):
+                result.append(random.randint(1,dice))
+            if explode is True:
+                loops=len(result)
+                k=0
+                while (k < loops):
+                    #print(k)
+                    if result[k]==dice:
+                        result.append(random.randint(1,dice))
+                        loops=len(result)
+                    k=k+1
+                    if k>100: #save us from infinite loops
+                        break
+            result_i= [int(i) for i in result]
+
+            if keep is True:
+                if "p" in formula:
+                    highest=min(result_i)
+                else:
+                    highest=max(result_i)
+            else:
+                highest=sum(result)
+            #print(keep)
+            if keep is True:
+                for x in range(0,len(result_i)):
+                    if result_i[x]!=highest:
+                        if keep is True:
+                            out_roll.append("~~")
+                            out_roll.append(str(result_i[x]))
+                            out_roll.append("~~")
+                        else:
+                            out_roll.append(str(result_i[x]))
                     else:
                         out_roll.append(str(result_i[x]))
-                else:
-                    out_roll.append(str(result_i[x]))
-                if x!=len(result_i)-1:
-                    out_roll.append("+")
-        else:
-            highest=sum(result)
-            for x in range(0,len(result_i)):
-                    out_roll.append(str(result_i[x]))
                     if x!=len(result_i)-1:
                         out_roll.append("+")
-        out_roll.append(")")
-        if modifier>0:
-            out_roll.append("+")
-        if dice==highest:
-            if modifier != 0:
-                out_roll.append(f"{modifier}=__**{highest+modifier}**__")
             else:
-                out_roll.append(f"=__**{highest+modifier}**__")
-        elif modifier==0:
-            out_roll.append(f"=**{highest}**")
-        else:
-            out_roll.append(f"{modifier}=**{highest+modifier}**")
-        #print(out_roll)
-    if brief is True:
-        out_saved=out_roll
-        out_roll=[f"{requester}: "]
-        brief_pattern=re.compile("\*\*-*\d+\*\*")
-        brief_match=brief_pattern.findall(''.join(out_saved))
-        for k in range(0,len(brief_match)):
-            if k==len(brief_match)-1:
-                critcheck=brief_match[k].replace("*","")
-                if (int(critcheck)-modifier)==dice:
-                    out_roll.append(f"__{brief_match[k]}__")
+                highest=sum(result)
+                for x in range(0,len(result_i)):
+                        out_roll.append(str(result_i[x]))
+                        if x!=len(result_i)-1:
+                            out_roll.append("+")
+            out_roll.append(")")
+            if modifier>0:
+                out_roll.append("+")
+            if dice==highest:
+                if modifier != 0:
+                    out_roll.append(f"{modifier}=__**{highest+modifier}**__")
                 else:
-                    out_roll.append(f"{brief_match[k]}")
+                    out_roll.append(f"=__**{highest+modifier}**__")
+            elif modifier==0:
+                out_roll.append(f"=**{highest}**")
             else:
-                critcheck=brief_match[k].replace("*","")
-                if (int(critcheck)-modifier)==dice:
-                    out_roll.append(f"__{brief_match[k]}__, ")
+                out_roll.append(f"{modifier}=**{highest+modifier}**")
+            #print(out_roll)
+        if brief is True:
+            out_saved=out_roll
+            out_roll=[f"{requester}: "]
+            brief_pattern=re.compile("\*\*-*\d+\*\*")
+            brief_match=brief_pattern.findall(''.join(out_saved))
+            for k in range(0,len(brief_match)):
+                if k==len(brief_match)-1:
+                    critcheck=brief_match[k].replace("*","")
+                    if (int(critcheck)-modifier)==dice:
+                        out_roll.append(f"__{brief_match[k]}__")
+                    else:
+                        out_roll.append(f"{brief_match[k]}")
                 else:
-                    out_roll.append(f"{brief_match[k]}, ")
-    if comment!="":
-        if comment[0]=="#" and comment[1]=="#":
-            comment=comment[1:]
-        out_roll.append(f" #{' '.join(comment)}")
-    await ctx.send(''.join(out_roll))
+                    critcheck=brief_match[k].replace("*","")
+                    if (int(critcheck)-modifier)==dice:
+                        out_roll.append(f"__{brief_match[k]}__, ")
+                    else:
+                        out_roll.append(f"{brief_match[k]}, ")
+        if comment!="":
+            if comment[0]=="#" and comment[1]=="#":
+                comment=comment[1:]
+            out_roll.append(f" #{' '.join(comment)}")
+        await ctx.send(''.join(out_roll))
 
 
 #dice rolling.

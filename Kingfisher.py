@@ -19,6 +19,7 @@ import time
 import threading
 import traceback
 import uuid
+import cProfile
 
 
 import discord  # the crown jewel
@@ -32,7 +33,7 @@ from PIL import Image, ImageDraw, ImageColor
 from ruamel.yaml import YAML
 from operator import itemgetter
 
-version = "0.2.4 Archivist"
+version = "0.2.5 Roll v2"
 
 
 # TODO: add self-tagging, servers
@@ -297,6 +298,14 @@ async def sid(loc):
     else:
         sid=str(loc)
     return sid
+
+async def sizeof_fmt(num, suffix='B'):
+    ''' by Fred Cirera,  https://stackoverflow.com/a/1094933/1870254, modified'''
+    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+        if abs(num) < 1024.0:
+            return "%3.1f %s%s" % (num, unit, suffix)
+        num /= 1024.0
+    return "%.1f %s%s" % (num, 'Yi', suffix)
 
 
 async def rem_depickle(rem_dict):
@@ -638,9 +647,33 @@ async def order66(ctx,cat_id=None):
     for i in category.text_channels:
         await ctx.send(f"Deleting {i.name}.")
         await i.delete()
-    await category.delete()
+    #await category.delete()  # keeping the empty category is actually a better idea
     await ctx.send(f"TERMINATION. AGREEMENT.")
 
+
+@bot.command(description="How many channels are in this server?",hidden=False)
+async def channels(ctx,):
+    counter=len(ctx.guild.channels)
+    await ctx.send(f"There are {counter} channels in this server.")
+
+
+@commands.check(owner_only)
+@bot.command(description="Prints memory usage.",hidden=True)
+async def mem(ctx,):
+    text="Locals --------"
+    print(f"MEM Variables, memory useage: \n  {text:>20}")
+
+    for name, size in sorted(((name, sys.getsizeof(value)) for name, value in locals().items()),
+                         key= lambda x: -x[1])[:10]:
+        print("{:>30}: {:>8}".format(name, await sizeof_fmt(size)))
+
+    text="Globals --------"
+    print(f"{text:>20}")
+
+    for name, size in sorted(((name, sys.getsizeof(value)) for name, value in globals().items()),
+                         key= lambda x: -x[1])[:10]:
+        print("{:>30}: {:>8}".format(name, await sizeof_fmt(size)))
+    
 
 @bot.command(description="Need help? Want to ask for new features? Visit the Nest, the central server for all your Kingfisher needs.")
 async def nest(ctx):

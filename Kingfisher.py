@@ -1053,7 +1053,7 @@ async def augment(ctx, classification=None, card=None):
             if p_match:
                 if p_match.group()[:-1].casefold()==card.casefold():
                     embed=discord.Embed(title=f"{classification.title()} Augment",description=augs[i],colour=augcolour)
-                    embed.set_image(url=f"https://www.hivewiki.de/kingfisher/cards/{i}_{cards[i]}.png")
+                    embed.set_image(url=f"https://www.hivewiki.de/kingfisher/cards/{i-1}_{cards[i-1]}.png")
                     await ctx.send(embed=embed)
                     return
                     #await ctx.send(augs[i])

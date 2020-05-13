@@ -680,6 +680,11 @@ async def nest(ctx):
     await ctx.send("https://discord.gg/gxQVAbA")
 
 
+@bot.command(description="Default link to invite KF to your server. You need to be the owner or an admin!")
+async def invite(ctx):
+    await ctx.send("https://discordapp.com/oauth2/authorize?client_id=434701766425313280&scope=bot&permissions=271961280")
+
+
 @bot.command(description="Deletes message content",hidden=True)
 async def purge(ctx,limiter=100):
     if ctx.message.author.id not in owner:
@@ -1023,7 +1028,7 @@ async def augment(ctx, classification=None, card=None):
         return
     augcolour=discord.Colour(0xBF9000)
     classifications=["blaster","breaker","brute","changer","master","mover","shaker","stranger","striker","tinker","thinker","trump"]
-    cards=["fool","magi","priestess","lady","lord","pope","lovers","chariot","strength","hermit","wheel","justice","hanged","death","temperance","devil","tower","star","moon","sun","judgement","world"]
+    cards=["fool","magician","priestess","empress","emperor","hierophant","lovers","chariot","strength","hermit","wheel","justice","hanged","death","temperance","devil","tower","star","moon","sun","judgement","world"]
     if classification in cards:
         await ctx.send(augfeed[cards.index(classification)+1][1])
         return
@@ -1032,10 +1037,12 @@ async def augment(ctx, classification=None, card=None):
         out=random.randint(1,len(augfeed)-1)
         if augfeed[out][augindex]!="":
             embed = discord.Embed(title=f"{classification.title()} Augment",description=augfeed[out][augindex],colour=augcolour)
+            embed.set_image(url=f"https://www.hivewiki.de/kingfisher/cards/{out-1}_{cards[out-1]}.png")
             await ctx.send(embed=embed)
             #await ctx.send(augfeed[out][augindex])
         else:
-            embed = discord.Embed(title=f"{classification.title()} Augment - General",description=f"**{augfeed[out][0].title()}**: {augfeed[out][1]}",colour=augcolour)
+            embed = discord.Embed(title=f"{classification.title()} Augment - General",description=f"**{augfeed[out][0].title()}**: {augfeed[out][1]}",colour=augcolour) 
+            embed.set_image(url=f"https://www.hivewiki.de/kingfisher/cards/{out-1}_{cards[out-1]}.png")
             await ctx.send(embed=embed)
             #await ctx.send(f"**{augfeed[out][0].title()}**: {augfeed[out][1]}")
     else:
@@ -1045,7 +1052,9 @@ async def augment(ctx, classification=None, card=None):
             p_match=p_pattern.search(augs[i])
             if p_match:
                 if p_match.group()[:-1].casefold()==card.casefold():
-                    await ctx.send(embed=discord.Embed(title=f"{classification.title()} Augment",description=augs[i],colour=augcolour))
+                    embed=discord.Embed(title=f"{classification.title()} Augment",description=augs[i],colour=augcolour)
+                    embed.set_image(url=f"https://www.hivewiki.de/kingfisher/cards/{i}_{cards[i]}.png")
+                    await ctx.send(embed=embed)
                     return
                     #await ctx.send(augs[i])
         await ctx.send(f"No {card.title()} augment defined.")
@@ -1988,6 +1997,10 @@ async def newroll(ctx,formula="default",*comment):
     modifier=0
     if "d" in formula.casefold():
         d_pattern=re.compile(r"((?:d|D)\d+)[^\+]*")
+        # We're trying to identify the strings for each dice node
+        # a dice node being centered on a specific dice size, and then modified as needed
+        # There's dice nodes and then the full stack
+        # the stack applies to the full roll and is applied last
         d_match=d_pattern.finditer(formula)
         start=0
         groups=[]

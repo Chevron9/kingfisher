@@ -1966,6 +1966,7 @@ async def show(ctx,title=None,user=None):
 @bot.command(description="See >tag roll for help",aliases=["nr"])
 async def newroll(ctx,formula="default",*comment):
     loc=ctx.message.guild.id
+    base_modifier=0
     s_id = await sid(loc)
 
     if formula[0]=="$":
@@ -2004,7 +2005,7 @@ async def newroll(ctx,formula="default",*comment):
         d_match=d_pattern.finditer(formula)
         start=0
         groups=[]
-        for i in d_match:  ##   CONTINUE HERE
+        for i in d_match:  ##   CONTINUE HERE - make sure stuff outside of node isnt lost!
             print(f"d_match_i: {i}")
             extra=formula[start:i.end(0)]
             if extra[0]=="+":
@@ -2031,6 +2032,9 @@ async def newroll(ctx,formula="default",*comment):
             keep=True
     #print(f"dice: {dice}")
     for formula in groups:
+        d_pattern=re.compile("(d|D)(\d)*")
+        d_match=d_pattern.search(formula)
+        print(f"d_match: {d_match}")
         dice=int(d_match.group()[1:])
         if ("+" in formula) or ("-" in formula):
             if ("++" in formula) or ("--" in formula):
@@ -2040,14 +2044,14 @@ async def newroll(ctx,formula="default",*comment):
                 if "c" in formula.casefold():
                     modifier=5+modifier
                 else:
-                    modifier=4+modifier
+                    modifier=base_modifier+modifier
             else:
                 mod_pattern=re.compile("(\+|\-)+(\d)*")
                 mod_match=mod_pattern.search(formula)
                 modifier=int(mod_match.group())
         else:
             if dice==20:
-                modifier=4+modifier
+                modifier=base_modifier+modifier
         #print(f"modifier: {modifier}")
 
         brief=False

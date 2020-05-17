@@ -33,7 +33,7 @@ from PIL import Image, ImageDraw, ImageColor
 from ruamel.yaml import YAML
 from operator import itemgetter
 
-version = "0.2.5 Roll v2"
+version = "0.3 Roll v2"
 
 
 # TODO: add self-tagging, servers
@@ -780,6 +780,11 @@ async def die(ctx):
     b_task2.cancel()
 
     schedstop.set()
+
+    # TODO needs to save og nickname 
+    # servs=bot.guilds
+    # for i in servs:
+    #     await i.me.edit(nick="Restarting...")
 
     await bot.close()
 
@@ -1967,6 +1972,7 @@ async def show(ctx,title=None,user=None):
 async def newroll(ctx,formula="default",*comment):
     loc=ctx.message.guild.id
     base_modifier=0
+
     s_id = await sid(loc)
 
     if formula[0]=="$":
@@ -1994,25 +2000,44 @@ async def newroll(ctx,formula="default",*comment):
     if (s_id=="portland") and (formula=="default"):
         formula="1d6"
     elif formula=="default":
-        formula="1d20+1d6"
+        formula="1d20,1d6++0"
     modifier=0
+    print("formula: "+formula)
     if "d" in formula.casefold():
-        d_pattern=re.compile(r"((?:d|D)\d+)[^\+]*")
+        if ("(" in formula) and (")" in formula):
+            bracketed=[]
+            b_pattern=re.compile(r"\([^)]*\)")
+            b_match=b_pattern.finditer(formula)
+            for i in b_match:
+                #print(f"bracket_match: {i}")
+                bracketed.append(formula[i.start():i.end()])
+            print("Bracketed "+str(bracketed))
+            formula=re.sub(r"\([^)]*\)","",formula)
+            print("Post-bracketed formula "+formula)
+        
+        f_pattern=re.compile(r"(?P<node>(?P<prestack>[^dD,(]*)(?P<dice>\d*D\d+)(?P<poststack>[^dD,)]*))",re.I)
         # We're trying to identify the strings for each dice node
         # a dice node being centered on a specific dice size, and then modified as needed
         # There's dice nodes and then the full stack
         # the stack applies to the full roll and is applied last
-        d_match=d_pattern.finditer(formula)
+        #pre and post stack are not functionally different, just a quality of life thing
+        #pre-stack can include how many dice are rolled (and taken highest of) but post cannot
+        
+        f_match=f_pattern.findall(formula)
         start=0
         groups=[]
-        for i in d_match:  ##   CONTINUE HERE - make sure stuff outside of node isnt lost!
-            print(f"d_match_i: {i}")
-            extra=formula[start:i.end(0)]
-            if extra[0]=="+":
-                extra = extra[1:]
+        rest_collector=[]
+        print(f"f_match {f_match}")
+        for i in f_match:  ##   CONTINUE HERE - make sure stuff outside of node isnt lost!
+            print(f"f_match_i: {i}")
+            extra=i
             groups.append(extra)
             print(f"groups: {groups}")
-            start=i.end(0)
+
+
+        rest=re.sub(f_pattern,"",formula)
+        print("rest "+rest)
+
         
         if "D" in formula:
             keep=False
@@ -2031,6 +2056,7 @@ async def newroll(ctx,formula="default",*comment):
                 dice=20
             keep=True
     #print(f"dice: {dice}")
+
     for formula in groups:
         d_pattern=re.compile("(d|D)(\d)*")
         d_match=d_pattern.search(formula)

@@ -2293,7 +2293,7 @@ async def newroll(ctx,formula="default",*comment):
                             out_roll.append(f"__{brief_match[k]}__, ")
                         else:
                             out_roll.append(f"{brief_match[k]}, ")
-            if repeat!=(repeats[node]-1):
+            if repeat!=(repeats[node]-1): #continue here
                 out_roll.append(", ")
         if stack_repeat_loop!=(stack_repeats-1):
                 out_roll.append(", ")

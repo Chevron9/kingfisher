@@ -2012,12 +2012,14 @@ async def newroll(ctx,formula="default",*comment):
         b_match=b_pattern.finditer(formula)
         for i in b_match:
             #print(f"bracket_match: {i}")
-            bracketed.append(formula[i.start():i.end()])
+            bracketed.append(formula[i.start()+1:i.end()-1])
         print("Bracketed "+str(bracketed))
-        formula=re.sub(r"\([^)]*\)","",formula) 
-        print("Post-bracketed formula "+formula)
+        #formula=re.sub(r"\([^)]*\)","",formula) 
+        #print("Post-bracketed formula "+formula)
+        #for i in bracketed:
+        #    await ctx.invoke(roll,formula=i[1:-1])
     
-    f_pattern=re.compile(r"(?P<node>(?P<prestack>\d*)(?P<dice>(?:D|C)*\d*)(?P<poststack>[^dD,)]*))",re.I)
+    f_pattern=re.compile(r"(?P<node>(?P<prestack>[^(),]\d*)(?P<dice>(?:D|C)*\d*)(?P<poststack>[^dD,)]*))",re.I)
     # We're trying to identify the strings for each dice node
     # a dice node being centered on a specific dice size, and then modified as needed
     # There's dice nodes and then the full stack
@@ -2032,7 +2034,7 @@ async def newroll(ctx,formula="default",*comment):
     print(f"f_match {f_match}")
     for i in f_match:  ##   CONTINUE HERE - make sure stuff outside of node isnt lost!
         #print(f"f_match_i: {i}")
-        if all(i):
+        if any(i):
             groups.append(i)
         print(f"groups: {groups}")
 
@@ -2058,18 +2060,38 @@ async def newroll(ctx,formula="default",*comment):
     stack_repeats=1
     stack_keep=True
     stack_brief=False
-    dice=[None]*len(groups)
-    dice_i=[1]*len(groups)
-    modifier=[0]*len(groups)
-    repeats=[1]*len(groups)
-    keep=[True]*len(groups)
-    brief=[False]*len(groups)
+    stack_explode=False
+    stack_high_low="High"
+    
+    stacks=len(groups)
+    dice=[None]*stacks
+    dice_i=[1]*stacks
+    modifier=[0]*stacks
+    repeats=[1]*stacks
+    keep=[True]*stacks
+    brief=[False]*stacks
+    explode=[False]*stacks
+    bracketed=[False]*stacks
+    high_low=["High"]*stacks
     
 
-    for node in range(0,len(groups)): #working through all the parts of the formula
+    for node in range(0,stacks): #working through all the parts of the formula
+        #TODO: use rest!
 
         print(f"node: {groups[node]}")
         print(groups[node][2])
+
+        if groups[node][0] in bracketed:
+            bracketed[node]=True
+            print("Bracketed stack detected")
+
+        if groups[node][0]==groups[node][1]: #making sure the shorthand 1,1 etc works.
+            if groups[node]==groups[0]:
+                dice=20
+                continue
+            if groups[node]==groups[1]:
+                dice=6
+                continue
 
         if groups[node][2]=="": #determining die size (d20, d6 etc)
             if node==0:
@@ -2081,7 +2103,7 @@ async def newroll(ctx,formula="default",*comment):
         elif "c" in groups[node]:
             dice[node]=6
             modifier[node]=5
-            keep=True
+            keep[node]=True
         else:
             dice[node]=int(groups[node][2][1:])
         
@@ -2099,18 +2121,30 @@ async def newroll(ctx,formula="default",*comment):
                 if ("++" in part) or ("--" in part):
                     mod_pattern=re.compile("(\+\+|\-\-)(\d)+")
                     mod_match=mod_pattern.search(part)
-                    modifier[node]=int(mod_match.group()[1:])
+                    if bracketed:
+                        modifier[node]=int(mod_match.group()[1:])
+                    else:
+                        stack_modifier=int(mod_match.group()[1:])
+                    
                     if "c" in part.casefold():
                         modifier[node]+=5
                     else:
-                        modifier[node]+=base_modifier
+                        if bracketed:
+                            modifier[node]+=base_modifier
+                        else:
+                            stack_modifier+=base_modifier
                 else:
                     mod_pattern=re.compile("(\+|\-)+(\d)+")
                     mod_match=mod_pattern.search(part)
-                    modifier[node]=int(mod_match.group())
+                    if bracketed:
+                        modifier[node]=int(mod_match.group())
+                    else:
+                        stack_modifier=int(mod_match.group())
                 
+                print("modifier stuff")
                 print(part)
                 print(mod_match)
+                print(stack_modifier)
 
             else:
                 if dice==20:
@@ -2118,141 +2152,156 @@ async def newroll(ctx,formula="default",*comment):
             print(f"modifier: {modifier}")
 
 
-        if "b" in groups[node]:
-            brief=True
-        if "x" in groups[node]:
-            if "xb" in groups[node]:
-                brief=True
-                x_pattern=re.compile("xb(\d)*")
-                x_match=x_pattern.search(groups[node])
-                if x_match:
-                    repeats=int(x_match.group()[2:])
+        if "b" in groups[node][3]:
+            if bracketed:
+                brief[node]=True
             else:
-                brief=False
-                x_pattern=re.compile("x(\d)*")
-                x_match=x_pattern.search(groups[node])
-                if x_match:
-                    repeats=int(x_match.group()[1:])
-        else:
-            repeats=1
-        #print(f"repeats: {repeats}")
+                stack_brief=True
 
-        i_pattern=re.compile("(\A)(\d)*")
-        i_match=i_pattern.search(groups[node])
-        if i_match:
-            try:
-                i=int(i_match.group())
-            except ValueError:
-                if dice==20:
-                    if formula_in[0]=="d":
-                        if "d20" in formula_in_:
-                            i=1
-                    else:
-                        i=3
+        if "x" in groups[node][3]:
+            if "xb" in groups[node][3]:
+                if bracketed:
+                    brief[node]=True
                 else:
-                    i=1
-                #print("ValueError")
+                    stack_brief=True
+                x_pattern=re.compile("xb(\d)*")
+                x_match=x_pattern.search(groups[node][3])
+                if x_match:
+                    if bracketed:
+                        repeats[node]=int(x_match.group()[2:])
+                    else:
+                        stack_repeats=int(x_match.group()[2:])
+            else:
+                if bracketed:
+                    brief[node]=True
+                else:
+                    stack_brief=True
+                x_pattern=re.compile("x(\d)*")
+                x_match=x_pattern.search(groups[node][3])
+                if x_match:
+                    if bracketed:
+                        repeats[node]=int(x_match.group()[1:])
+                    else:
+                        stack_repeats=int(x_match.group()[1:])
         else:
-            print("i-error in roll!")
-            return
-        #print(f"die #s: {i}")
+            if bracketed:
+                repeats[node]=1
+            else:
+                stack_repeats=1
+            
+        print(f"repeats: {stack_repeats}, {repeats[node]}")
 
-        if "!" in groups[node]:
-            explode=True
-        else:
-            explode=False
+        if "!" in groups[node][3]:
+            if bracketed:
+                explode[node]=True
+            else:
+                stack_explode=True
 
-        requester=ctx.message.author.name
-        out_roll=[f"{requester}: ("]
+        if "D" in groups[node][2]:
+            if bracketed:
+                keep[node]=False
+            else:
+                stack_keep=False
 
-        #print(repeats)
-        #print(dice)
-        #print(i)
-        if (repeats>10e3) or (dice>10e7) or (i>10e3):
+        if "p" in groups[node][3]:
+            if bracketed:
+                high_low[node]="Low"
+            else:
+                stack_high_low="Low"
+        
+        if (stack_repeats>10e3) or (repeats[node]>10e3) or (dice[node]>10e7) or (dice_i[node]>10e3): #safeguard against unnecessarily large rolls
             await ctx.send("BRB, driving to the dice store. Oh no, looks like they're all out of dice, just like I am of fucks to give about your spammy rolls.")
             return
-        for j in range(0,repeats):
-            if (j!=0):
-                out_roll.append(", (")
-            result=[]
-            for x in range(0,i):
-                result.append(random.randint(1,dice))
-            if explode is True:
-                loops=len(result)
-                k=0
-                while (k < loops):
-                    #print(k)
-                    if result[k]==dice:
-                        result.append(random.randint(1,dice))
-                        loops=len(result)
-                    k=k+1
-                    if k>100: #save us from infinite loops
-                        break
-            result_i= [int(i) for i in result]
 
-            if keep is True:
-                if "p" in groups[node]:
-                    highest=min(result_i)
+    requester=ctx.message.author.name
+    out_roll=[f"{requester}: `{formula}` ("] #this will be our return
+
+    for stack_repeat_loop in range(0,stack_repeats):
+        for node in range(0,stacks):
+            for repeat in range(0,repeats[node]): #bracketed
+                if (repeat!=0):
+                    out_roll.append(", (")
+                result=[]
+                for x in range(0,dice_i[node]):
+                    result.append(random.randint(1,dice[node]))
+                if explode[node] or stack_explode:
+                    loops=len(result)
+                    k=0
+                    while (k < loops):
+                        #print(k)
+                        if result[k]==dice[node]:
+                            result.append(random.randint(1,dice[node]))
+                            loops=len(result)
+                        k=k+1
+                        if k>100: #save us from infinite loops
+                            await ctx.send("Too many exploding dice! Help, everything is on fire!")
+                            break
+                result_i= [int(i) for i in result] #convert result to int
+
+                if keep[node] or stack_keep:
+                    if high_low[node]=="Low":
+                        highest=min(result_i)
+                    else:
+                        highest=max(result_i)
                 else:
-                    highest=max(result_i)
-            else:
-                highest=sum(result)
-            #print(keep)
-            if keep is True:
-                for x in range(0,len(result_i)):
-                    if result_i[x]!=highest:
-                        if keep is True:
+                    highest=sum(result)
+                #print(keep)
+                if keep[node] or stack_keep:
+                    for x in range(0,len(result_i)):
+                        if result_i[x]!=highest:
                             out_roll.append("~~")
                             out_roll.append(str(result_i[x]))
                             out_roll.append("~~")
                         else:
                             out_roll.append(str(result_i[x]))
-                    else:
-                        out_roll.append(str(result_i[x]))
-                    if x!=len(result_i)-1:
-                        out_roll.append("+")
-            else:
-                highest=sum(result)
-                for x in range(0,len(result_i)):
-                        out_roll.append(str(result_i[x]))
                         if x!=len(result_i)-1:
                             out_roll.append("+")
-            out_roll.append(")")
-            if modifier[node]>0:
-                out_roll.append("+")
-            if dice==highest:
-                if modifier[node] != 0:
-                    out_roll.append(f"{modifier[node]}=__**{highest+modifier[node]}**__")
                 else:
-                    out_roll.append(f"=__**{highest+modifier[node]}**__")
-            elif modifier[node]==0:
-                out_roll.append(f"=**{highest}**")
-            else:
-                out_roll.append(f"{modifier[node]}=**{highest+modifier[node]}**")
-            #print(out_roll)
-        if brief is True:
-            out_saved=out_roll
-            out_roll=[f"{requester}: "]
-            brief_pattern=re.compile("\*\*-*\d+\*\*")
-            brief_match=brief_pattern.findall(''.join(out_saved))
-            for k in range(0,len(brief_match)):
-                if k==len(brief_match)-1:
-                    critcheck=brief_match[k].replace("*","")
-                    if (int(critcheck)-modifier[node])==dice:
-                        out_roll.append(f"__{brief_match[k]}__")
+                    highest=sum(result)
+                    for x in range(0,len(result_i)):
+                            out_roll.append(str(result_i[x]))
+                            if x!=len(result_i)-1:
+                                out_roll.append("+")
+                out_roll.append(")")
+                if modifier[node]>0:
+                    out_roll.append("+")
+                if dice==highest:
+                    if modifier[node] != 0:
+                        out_roll.append(f"{modifier[node]}=__**{highest+modifier[node]}**__")
                     else:
-                        out_roll.append(f"{brief_match[k]}")
+                        out_roll.append(f"=__**{highest+modifier[node]}**__")
+                elif modifier[node]==0:
+                    out_roll.append(f"=**{highest}**")
                 else:
-                    critcheck=brief_match[k].replace("*","")
-                    if (int(critcheck)-modifier[node])==dice:
-                        out_roll.append(f"__{brief_match[k]}__, ")
+                    out_roll.append(f"{modifier[node]}=**{highest+modifier[node]}**")
+                #print(out_roll)
+            if brief[node] or stack_brief: #convert into shorthand if desired
+                out_saved=out_roll
+                out_roll=[f"{requester}: "]
+                brief_pattern=re.compile("\*\*-*\d+\*\*")
+                brief_match=brief_pattern.findall(''.join(out_saved))
+                for k in range(0,len(brief_match)):
+                    if k==len(brief_match)-1:
+                        critcheck=brief_match[k].replace("*","")
+                        if (int(critcheck)-modifier[node])==dice:
+                            out_roll.append(f"__{brief_match[k]}__")
+                        else:
+                            out_roll.append(f"{brief_match[k]}")
                     else:
-                        out_roll.append(f"{brief_match[k]}, ")
-        if comment!="":
-            if comment[0]=="#" and comment[1]=="#":
-                comment=comment[1:]
-            out_roll.append(f" #{' '.join(comment)}")
-        await ctx.send(''.join(out_roll))
+                        critcheck=brief_match[k].replace("*","")
+                        if (int(critcheck)-modifier[node])==dice:
+                            out_roll.append(f"__{brief_match[k]}__, ")
+                        else:
+                            out_roll.append(f"{brief_match[k]}, ")
+            if repeat!=(repeats[node]-1):
+                out_roll.append(", ")
+        if stack_repeat_loop!=(stack_repeats-1):
+                out_roll.append(", ")
+    if comment!="":
+        if comment[0]=="#" and comment[1]=="#":
+            comment=comment[1:]
+        out_roll.append(f" #{' '.join(comment)}")
+    await ctx.send(''.join(out_roll))
 
 
 #dice rolling.

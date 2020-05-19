@@ -2005,7 +2005,7 @@ async def newroll(ctx,formula="default",*comment):
     modifier=0
     print("formula: "+formula)
     
-
+    bracketed=""
     if ("(" in formula) and (")" in formula):
         bracketed=[]
         b_pattern=re.compile(r"\([^)]*\)") #everything enclosed in ()
@@ -2036,7 +2036,7 @@ async def newroll(ctx,formula="default",*comment):
         #print(f"f_match_i: {i}")
         if any(i):
             groups.append(i)
-        print(f"groups: {groups}")
+    print(f"groups: {groups}")
 
 
     rest=re.sub(f_pattern,"",formula)
@@ -2071,18 +2071,26 @@ async def newroll(ctx,formula="default",*comment):
     keep=[True]*stacks
     brief=[False]*stacks
     explode=[False]*stacks
-    bracketed=[False]*stacks
+    bracket=[False]*stacks
     high_low=["High"]*stacks
+    results=[None]*stacks
     
 
     for node in range(0,stacks): #working through all the parts of the formula
-        #TODO: use rest!
+
+        print(groups[node])
+        t_rest=list(groups[node])
+        t_rest[3]+=rest
+        print(rest)
+        groups[node]=tuple(t_rest)
+        print(groups[node])
+        #node 3 is the one containing all the flags
 
         print(f"node: {groups[node]}")
         print(groups[node][2])
 
         if groups[node][0] in bracketed:
-            bracketed[node]=True
+            bracket[node]=True
             print("Bracketed stack detected")
 
         if groups[node][0]==groups[node][1]: #making sure the shorthand 1,1 etc works.
@@ -2121,7 +2129,8 @@ async def newroll(ctx,formula="default",*comment):
                 if ("++" in part) or ("--" in part):
                     mod_pattern=re.compile("(\+\+|\-\-)(\d)+")
                     mod_match=mod_pattern.search(part)
-                    if bracketed:
+                    print(bracket[node])
+                    if bracket[node]:
                         modifier[node]=int(mod_match.group()[1:])
                     else:
                         stack_modifier=int(mod_match.group()[1:])
@@ -2129,62 +2138,57 @@ async def newroll(ctx,formula="default",*comment):
                     if "c" in part.casefold():
                         modifier[node]+=5
                     else:
-                        if bracketed:
+                        if bracket[node]:
                             modifier[node]+=base_modifier
                         else:
                             stack_modifier+=base_modifier
                 else:
                     mod_pattern=re.compile("(\+|\-)+(\d)+")
                     mod_match=mod_pattern.search(part)
-                    if bracketed:
+                    if bracket[node]:
                         modifier[node]=int(mod_match.group())
                     else:
                         stack_modifier=int(mod_match.group())
-                
-                print("modifier stuff")
-                print(part)
-                print(mod_match)
-                print(stack_modifier)
 
             else:
                 if dice==20:
                     modifier[node]=base_modifier+modifier[node]
-            print(f"modifier: {modifier}")
+            print(f"modifier: {modifier},{stack_modifier}")
 
 
         if "b" in groups[node][3]:
-            if bracketed:
+            if bracket[node]:
                 brief[node]=True
             else:
                 stack_brief=True
 
         if "x" in groups[node][3]:
             if "xb" in groups[node][3]:
-                if bracketed:
+                if bracket[node]:
                     brief[node]=True
                 else:
                     stack_brief=True
                 x_pattern=re.compile("xb(\d)*")
                 x_match=x_pattern.search(groups[node][3])
                 if x_match:
-                    if bracketed:
+                    if bracket[node]:
                         repeats[node]=int(x_match.group()[2:])
                     else:
                         stack_repeats=int(x_match.group()[2:])
             else:
-                if bracketed:
+                if bracket[node]:
                     brief[node]=True
                 else:
                     stack_brief=True
                 x_pattern=re.compile("x(\d)*")
                 x_match=x_pattern.search(groups[node][3])
                 if x_match:
-                    if bracketed:
+                    if bracket[node]:
                         repeats[node]=int(x_match.group()[1:])
                     else:
                         stack_repeats=int(x_match.group()[1:])
         else:
-            if bracketed:
+            if bracket[node]:
                 repeats[node]=1
             else:
                 stack_repeats=1
@@ -2192,19 +2196,19 @@ async def newroll(ctx,formula="default",*comment):
         print(f"repeats: {stack_repeats}, {repeats[node]}")
 
         if "!" in groups[node][3]:
-            if bracketed:
+            if bracket[node]:
                 explode[node]=True
             else:
                 stack_explode=True
 
         if "D" in groups[node][2]:
-            if bracketed:
+            if bracket[node]:
                 keep[node]=False
             else:
                 stack_keep=False
 
         if "p" in groups[node][3]:
-            if bracketed:
+            if bracket[node]:
                 high_low[node]="Low"
             else:
                 stack_high_low="Low"
@@ -2214,10 +2218,14 @@ async def newroll(ctx,formula="default",*comment):
             return
 
     requester=ctx.message.author.name
-    out_roll=[f"{requester}: `{formula}` ("] #this will be our return
+    out_roll=[f"{requester}: `{formula}` ("] #this will be our output
 
     for stack_repeat_loop in range(0,stack_repeats):
+        if stack_repeat_loop !=0:
+            out_roll.append(", ")
         for node in range(0,stacks):
+            if node!=0:
+                out_roll.append(", (")
             for repeat in range(0,repeats[node]): #bracketed
                 if (repeat!=0):
                     out_roll.append(", (")
@@ -2274,6 +2282,7 @@ async def newroll(ctx,formula="default",*comment):
                     out_roll.append(f"=**{highest}**")
                 else:
                     out_roll.append(f"{modifier[node]}=**{highest+modifier[node]}**")
+                results[node]=highest
                 #print(out_roll)
             if brief[node] or stack_brief: #convert into shorthand if desired
                 out_saved=out_roll
@@ -2293,10 +2302,10 @@ async def newroll(ctx,formula="default",*comment):
                             out_roll.append(f"__{brief_match[k]}__, ")
                         else:
                             out_roll.append(f"{brief_match[k]}, ")
-            if repeat!=(repeats[node]-1): #continue here
-                out_roll.append(", ")
-        if stack_repeat_loop!=(stack_repeats-1):
-                out_roll.append(", ")
+                
+    final_result=sum(results)
+    out_roll.append(f": **{final_result}**")
+    
     if comment!="":
         if comment[0]=="#" and comment[1]=="#":
             comment=comment[1:]
@@ -3163,9 +3172,17 @@ async def show(ctx, cape=None):
 @account.command(description="Use this to add your cape to the database and gain access to the other commands. Your cape name is your 'key'.", alias="create")
 async def make(ctx,cape=None,amount=0,income=0):
     loc=ctx.message.guild.id
-    if (ctx.message.channel.id != 478240151987027978 and ctx.message.channel.id != 435874236297379861 and ctx.message.channel.id != 537152965375688719
-            and ctx.guild.id!=457290411698814980 and ctx.message.channel.id != 638118490628292612 and ctx.message.channel.id != 691369881039536178):
-        await ctx.send("BoK only operates in #faction-actions!")
+    authorized_channels=[478240151987027978,435874236297379861,537152965375688719,638118490628292612,691369881039536178]
+    authorized_guilds=[457290411698814980]
+    if (ctx.message.channel.id not in authorized_channels and ctx.guild.id not in authorized_guilds):
+        auth_channel=False
+        for i in ctx.guild.channels:
+            if i.id in authorized_channels:
+                auth_channel=i.id
+        if auth_channel:
+            await ctx.send(f"BoK only operates in <#{auth_channel}>!")
+        else:
+            await ctx.send("This server is not configured to utilize the accounts system.")
         return
     if cape is None:
         await ctx.send("I do need a name for you if this is going to work.")
@@ -3196,9 +3213,17 @@ async def make(ctx,cape=None,amount=0,income=0):
 @account.command(aliases=["u"], description="Keep track of expenses and gains with this.")
 async def update(ctx,cape, amount):
     loc=ctx.message.guild.id
-    if (ctx.message.channel.id != 478240151987027978 and ctx.message.channel.id != 435874236297379861 and ctx.message.channel.id != 537152965375688719
-            and ctx.guild.id!=457290411698814980 and ctx.message.channel.id != 638118490628292612 and ctx.message.channel.id != 691369881039536178):
-        await ctx.send("BoK only operates in #faction-actions!")
+    authorized_channels=[478240151987027978,435874236297379861,537152965375688719,638118490628292612,691369881039536178]
+    authorized_guilds=[457290411698814980]
+    if (ctx.message.channel.id not in authorized_channels and ctx.guild.id not in authorized_guilds):
+        auth_channel=False
+        for i in ctx.guild.channels:
+            if i.id in authorized_channels:
+                auth_channel=i.id
+        if auth_channel:
+            await ctx.send(f"BoK only operates in <#{auth_channel}>!")
+        else:
+            await ctx.send("This server is not configured to utilize the accounts system.")
         return
     with open(f"cash{loc}.txt") as f:
         accounts = json.load(f)
@@ -3221,9 +3246,17 @@ async def update(ctx,cape, amount):
 @account.command(aliases=["s"], description="Send money to another account.")
 async def send(ctx,cape,target, amount):
     loc=ctx.message.guild.id
-    if (ctx.message.channel.id != 478240151987027978 and ctx.message.channel.id != 435874236297379861 and ctx.message.channel.id != 537152965375688719
-            and ctx.guild.id!=457290411698814980 and ctx.message.channel.id != 638118490628292612 and ctx.message.channel.id != 691369881039536178):
-        await ctx.send("BoK only operates in #faction-actions!")
+    authorized_channels=[478240151987027978,435874236297379861,537152965375688719,638118490628292612,691369881039536178]
+    authorized_guilds=[457290411698814980]
+    if (ctx.message.channel.id not in authorized_channels and ctx.guild.id not in authorized_guilds):
+        auth_channel=False
+        for i in ctx.guild.channels:
+            if i.id in authorized_channels:
+                auth_channel=i.id
+        if auth_channel:
+            await ctx.send(f"BoK only operates in <#{auth_channel}>!")
+        else:
+            await ctx.send("This server is not configured to utilize the accounts system.")
         return
     with open(f"cash{loc}.txt") as f:
         accounts = json.load(f)
@@ -3254,9 +3287,17 @@ async def send(ctx,cape,target, amount):
 @account.command(aliases=["i"], description="Adjust your periodic income here. Use the weekly amount.")
 async def income(ctx,cape, amount):
     loc=ctx.message.guild.id
-    if (ctx.message.channel.id != 478240151987027978 and ctx.message.channel.id != 435874236297379861 and ctx.message.channel.id != 537152965375688719
-            and ctx.guild.id!=457290411698814980 and ctx.message.channel.id != 638118490628292612 and ctx.message.channel.id != 691369881039536178):
-        await ctx.send("BoK only operates in #faction-actions!")
+    authorized_channels=[478240151987027978,435874236297379861,537152965375688719,638118490628292612,691369881039536178]
+    authorized_guilds=[457290411698814980]
+    if (ctx.message.channel.id not in authorized_channels and ctx.guild.id not in authorized_guilds):
+        auth_channel=False
+        for i in ctx.guild.channels:
+            if i.id in authorized_channels:
+                auth_channel=i.id
+        if auth_channel:
+            await ctx.send(f"BoK only operates in <#{auth_channel}>!")
+        else:
+            await ctx.send("This server is not configured to utilize the accounts system.")
         return
     with open(f"cash{loc}.txt") as f:
         accounts = json.load(f)

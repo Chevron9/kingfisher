@@ -2014,12 +2014,8 @@ async def newroll(ctx,formula="default",*comment):
             #print(f"bracket_match: {i}")
             bracketed.append(formula[i.start()+1:i.end()-1])
         print("Bracketed "+str(bracketed))
-        #formula=re.sub(r"\([^)]*\)","",formula) 
-        #print("Post-bracketed formula "+formula)
-        #for i in bracketed:
-        #    await ctx.invoke(roll,formula=i[1:-1])
     
-    f_pattern=re.compile(r"(?P<node>(?P<prestack>[^(),]\d*)(?P<dice>(?:D|C)*\d*)(?P<poststack>[^dD,)]*))",re.I)
+    f_pattern=re.compile(r"(?P<node>(?P<prestack>[^(),dc]*\d*)(?P<dice>(?:D|C)*\d*)(?P<poststack>[^dD,)]*))",re.I)
     # We're trying to identify the strings for each dice node
     # a dice node being centered on a specific dice size, and then modified as needed
     # There's dice nodes and then the full stack
@@ -2096,7 +2092,8 @@ async def newroll(ctx,formula="default",*comment):
             bracket[node]=True
             print("Bracketed stack detected")
 
-        if groups[node][0]==groups[node][1]: #making sure the shorthand 1,1 etc works.
+
+        if (groups[node][0]==groups[node][1]) and (groups[node][0].isdigit()): #making sure the shorthand 1,1 etc works.
             if node==0:
                 dice_s[node]=20
                 dice_i[node]=int(groups[node][1])
@@ -2130,7 +2127,7 @@ async def newroll(ctx,formula="default",*comment):
             try:
                 dice_i[node]=int(groups[node][1])
                 print(f"dice_i: {dice_i}")
-            except TypeError:
+            except (TypeError,ValueError):
                 await ctx.send("dice_i Error")
 
         for part in groups[node]:

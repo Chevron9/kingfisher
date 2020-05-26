@@ -2221,7 +2221,7 @@ async def newroll(ctx,formula="default",*comment):
             else:
                 stack_high_low="Low"
         
-        if (stack_repeats>10e3) or (repeats[node]>10e3) or (dice_s[node]>10e7) or (dice_i[node]>10e3): #safeguard against unnecessarily large rolls
+        if (stack_repeats>10e2) or (repeats[node]>10e3) or (dice_s[node]>10e7) or (dice_i[node]>10e3): #safeguard against unnecessarily large rolls
             await ctx.send("BRB, driving to the dice store. Oh no, looks like they're all out of dice, just like I am of fucks to give about your spammy rolls.")
             return
 
@@ -2331,7 +2331,10 @@ async def newroll(ctx,formula="default",*comment):
         if comment[0]=="#" and comment[1]=="#":
             comment=comment[1:]
         out_roll.append(f" #{' '.join(comment)}")
-    await ctx.send(''.join(out_roll))
+    try:
+        await ctx.send(''.join(out_roll))
+    except discord.ext.commands.errors.CommandInvokeError:
+        await ctx.send("Message too long!")
 
 
 #dice rolling.
@@ -2457,7 +2460,7 @@ async def roll(ctx,formula="default",*comment):
     #print(repeats)
     #print(dice)
     #print(i)
-    if (repeats>10e3) or (dice>10e7) or (i>10e3):
+    if (repeats>10e2) or (dice>10e7) or (i>10e3):
         await ctx.send("BRB, driving to the dice store. Oh no, looks like they're all out of dice, just like I am of fucks to give about your spammy rolls.")
         return
     for j in range(0,repeats):
@@ -2541,7 +2544,10 @@ async def roll(ctx,formula="default",*comment):
         if comment[0]=="#" and comment[1]=="#":
             comment=comment[1:]
         out_roll.append(f" #{' '.join(comment)}")
-    await ctx.send(''.join(out_roll))
+    try:
+        await ctx.send(''.join(out_roll))
+    except discord.ext.commands.errors.CommandInvokeError:
+        await ctx.send("Message too long!")
 
 tag_muted=False #global
 

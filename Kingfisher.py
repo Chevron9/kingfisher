@@ -6,6 +6,7 @@ import datetime
 import json
 import logging
 import math
+import nltk
 import operator
 import os
 import pickle
@@ -18,6 +19,7 @@ import time
 import threading
 import traceback
 import uuid
+import cProfile
 
 
 import discord  # the crown jewel
@@ -28,32 +30,29 @@ from discord.ext import commands
 from discord.ext.commands import Bot, Cog
 from oauth2client.service_account import ServiceAccountCredentials
 from PIL import Image, ImageDraw, ImageColor
-from pytz import timezone
 from ruamel.yaml import YAML
 from operator import itemgetter
 
-version = "0.2.4 Archivist"
+version = "0.3 Roll v2"
 
-#TODO: add self-tagging, servers
-#TODO: ranking rework
-#TODO: add server configuration
-#TODO: migrate to db
+
+# TODO: add self-tagging, servers
+# TODO: ranking rework
+# TODO: add server configuration
+# TODO: migrate to db
 
 clientloop = asyncio.new_event_loop()
 asyncio.set_event_loop(clientloop)
 owner = [138340069311381505]  # hyper#4131
 gms= []
 
-stdlogger = logging.basicConfig(level=logging.INFO) #ignore
-#https://github.com/Rapptz/discord.py/search?q=on_command_error&unscoped_q=on_command_error
+stdlogger = logging.basicConfig(level=logging.INFO)
+# https://github.com/Rapptz/discord.py/search?q=on_command_error&unscoped_q=on_command_error
 logger = logging.getLogger('discord')
 logger.setLevel(logging.INFO)
 handler = logging.FileHandler(filename=f'discordTEST.log', encoding='utf-8', mode='a')
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
-
-# pylint suppressions
-# pylint: disable=E0102, W1401
 
 # Setup the Sheets API
 scope = ['https://spreadsheets.google.com/feeds',
@@ -63,7 +62,7 @@ credentials = ServiceAccountCredentials.from_json_keyfile_name('gspread.json', s
 gc = gspread.authorize(credentials)
 
 feed=[[],[],[]]
-#kingfisher reference doc
+# kingfisher reference doc
 with open("Reference.txt", 'r') as f:
         reference=f.read()
 RefSheet = gc.open_by_key(reference) # kf reference doc
@@ -100,6 +99,9 @@ sPlanner = sched.scheduler(time.time, time.sleep) # class sched.scheduler(timefu
 #global variables
 #################
 macros={}
+fools=False
+b_task=None
+b_task2=None
 
 #Map path, used for claim image editing
 rp_areas = {"gh":[(330.00,352.00),(412.00,226.00),(724.00,224.00),(688.00,350.00),(842.00,386.00),(936.00,212.00),(1164.00,410.00),(1300.00,214.00),(1424.00,160.00),
@@ -110,42 +112,42 @@ rp_areas = {"gh":[(330.00,352.00),(412.00,226.00),(724.00,224.00),(688.00,350.00
             (1034.00,1320.00),(1218.00,1402.00),(1312.00,1046.00),(1488.00,1058.00),(1646.00,1326.00),(1456.00,1288.00),(1392.00,1406.00),(1044.00,1428.00),(824.00,1406.00),
             (576.00,1430.00),(486.00,1512.00),(420.00,1402.00),(426.00,1528.00),(606.00,1652.00),(890.00,1664.00),(1096.00,1646.00),(1260.00,1640.00),(1440.00,1624.50),(1489.50,1438.50),
             (1608.00,1599.00)],
-            "dh":[(213.00,67.50),
-            (106.50,216.00),
-            (63.00,525.00),
-            (90.00,760.50),
-            (253.50,610.50),
-            (297.00,456.00),
-            (313.50,327.00),
-            (288.00,211.50),
-            (498.00,85.50),
-            (508.50,202.50),
-            (564.00,471.00),
-            (634.50,676.50),
-            (769.50,793.50),
-            (775.50,589.50),
-            (736.50,457.50),
-            (711.00,253.50),
-            (709.50,76.50),
-            (912.00,96.00),
-            (943.50,285.00),
-            (885.00,442.50),
-            (1024.50,486.00),
-            (1006.50,655.50),
-            (912.00,838.50),
-            (1087.50,886.50),
-            (1206.00,750.00),
-            (1219.50,619.50),
-            (1200.00,462.00),
-            (1137.00,336.00),
-            (1075.50,180.00),
-            (1294.50,184.50),
-            (1420.50,238.50),
-            (1224.00,355.50),
-            (1408.50,370.50),
-            (1432.50,540.00),
-            (1449.00,690.00),
-            (1422.00,985.50)]}
+            "dh":  [(213.00,67.50),
+                    (106.50,216.00),
+                    (63.00,525.00),
+                    (90.00,760.50),
+                    (253.50,610.50),
+                    (297.00,456.00),
+                    (313.50,327.00),
+                    (288.00,211.50),
+                    (498.00,85.50),
+                    (508.50,202.50),
+                    (564.00,471.00),
+                    (634.50,676.50),
+                    (769.50,793.50),
+                    (775.50,589.50),
+                    (736.50,457.50),
+                    (711.00,253.50),
+                    (709.50,76.50),
+                    (912.00,96.00),
+                    (943.50,285.00),
+                    (885.00,442.50),
+                    (1024.50,486.00),
+                    (1006.50,655.50),
+                    (912.00,838.50),
+                    (1087.50,886.50),
+                    (1206.00,750.00),
+                    (1219.50,619.50),
+                    (1200.00,462.00),
+                    (1137.00,336.00),
+                    (1075.50,180.00),
+                    (1294.50,184.50),
+                    (1420.50,238.50),
+                    (1224.00,355.50),
+                    (1408.50,370.50),
+                    (1432.50,540.00),
+                    (1449.00,690.00),
+                    (1422.00,985.50)]}
 
 typ_colours = {"Bash":0x0137f6,"Pierce":0xffa500,"Cut":0xb22649,"Freeze":0x00ecff,"Shock":0xd6ff00,"Rend":0x9937a5,"Burn":0x0fe754, "Poison":0x334403,
                "Armor":0x565759,"Engine":0x565759,"Wheel":0x565759,"System":0x565759,"Structural":0x565759}
@@ -197,7 +199,7 @@ async def on_ready():
                 channel=bot.get_channel(i["channel"])
                 try:
                     sPlanner.enterabs(i["timer"], 10, asyncio.run_coroutine_threadsafe,
-                                    argument=(channel.send(i["reactlist"],embed=i["embed"]),loop,), kwargs={})
+                                      argument=(channel.send(i["reactlist"],embed=i["embed"]),loop,), kwargs={})
                 except AttributeError:
                     print(i.embed.description)
         except FileNotFoundError:
@@ -226,8 +228,6 @@ async def on_ready():
 
     with open(f"rp_factions.yaml",mode="r+") as f:
         rp_factions=yaml.load(f)
-        #rp_factions=repr(dict(rp_factions))
-        print(rp_factions)
         rp_factions=dict(rp_factions) #YAML can't handle tuples, so we have convert back
         for guilds in rp_factions:
             rp_factions[guilds]=dict(rp_factions[guilds]) #we're also getting rid of all these fucki-annoying ordereddicts
@@ -298,6 +298,14 @@ async def sid(loc):
     else:
         sid=str(loc)
     return sid
+
+async def sizeof_fmt(num, suffix='B'):
+    ''' by Fred Cirera,  https://stackoverflow.com/a/1094933/1870254, modified'''
+    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+        if abs(num) < 1024.0:
+            return "%3.1f %s%s" % (num, unit, suffix)
+        num /= 1024.0
+    return "%.1f %s%s" % (num, 'Yi', suffix)
 
 
 async def rem_depickle(rem_dict):
@@ -437,10 +445,17 @@ async def on_member_remove(member):
 
 
 @bot.event
+async def on_message_edit(before,after):
+    global fools
+    if fools: #april fools, enforce entity-speak ("AGREEMENT.")
+        if (after.channel.id==435874236297379861) or (after.channel.id==465651565089259523) or (after.channel.id==478240151987027978):
+            await after.delete()
+
+
+@bot.event
 async def on_message(message):
     #function for having private chats people can declare stuff into
     #deletes the postings in one channel, then sends them to a different one
-
     try:
         #checks-public 587718887936753710
         #checks-private 587718930483773509
@@ -454,11 +469,18 @@ async def on_message(message):
         #test-dev 435874236297379861
         if not_me(message):
             #declare-public
-            #TODO: change this to embeds!
+            #TODO: change this to embeds!/make it pretty
             if message.channel.id==587718887936753710:
                 target=discord.utils.find(lambda m:m.id==587718930483773509,message.guild.channels)
                 await target.send(f"**{message.content}** sent by {message.author.name}, ID `{message.author.id}` at {message.created_at}")
                 await message.delete()
+
+            #declare public for duskhaven
+            elif message.channel.id==694012416639369297:
+                target=discord.utils.find(lambda m:m.id==694012447002066995,message.guild.channels)
+                await target.send(f"**{message.content}** sent by {message.author.name}, ID `{message.author.id}` at {message.created_at}")
+                await message.delete()
+
             #private-talk
             elif message.channel.id==603035662018543618:
                 target=discord.utils.find(lambda m:m.id==614168400523952181,message.guild.channels)
@@ -472,13 +494,93 @@ async def on_message(message):
                     await message.channel.send(f"{message.author.mention}: Think you're above the rules, huh? Read the pins, you illiterate baboon. Denied.")
                     await message.delete()
 
-            #custom messages. Mostly jokes.
-            elif message.content==("DOCTOR NEFARIOUS"):
-                await message.channel.send("🍋")
-            elif message.content==("Kingfisher, play Despacito"):
-                await message.channel.send("ɴᴏᴡ ᴘʟᴀʏɪɴɢ: Despacito \n ───────────────⚪─────────────────── \n  ◄◄⠀▐▐ ⠀►►⠀⠀ ⠀ 1:17 / 3:48 ⠀ ───○ 🔊⠀ ᴴᴰ ⚙ ❐ ⊏⊐")
-            elif message.content==("F"):
-                await message.channel.send("f")
+        global fools
+        if fools: #april fools, enforce entity-speak ("AGREEMENT.")
+            if (message.channel.id==435874236297379861) or (message.channel.id==465651565089259523) or (message.channel.id==478240151987027978):
+                try:
+                    deletion_trigger=False
+                    reason_caps=False
+                    reason="Message deleted. Remember: \n"
+
+                    counter=0
+                    async for old_message in message.channel.history(limit=2):
+                        #print("old message: "+old_message.content)
+                        counter+=1
+                        if old_message.author==message.author and counter==2:
+                            deletion_trigger=True
+                            reason+="No consecutive messages!\n"
+                    print("channel: "+message.channel.name)
+                    print(message.author.name)
+                    speak=message.content
+                    print("**** speak: "+speak)
+
+                    if message.attachments:
+                        await message.delete()
+
+                    #make sure we don't delete pings
+                    p_pattern=re.compile("<@(!|&)\d+>")
+                    p_match=p_pattern.sub("",speak)
+                    #print("p_match: "+p_match)
+                    #Make sure the message contains only nouns
+                    n_match=nltk.tag.pos_tag(p_match.split())
+                    #print(n_match)
+                    #if p_match==speak:
+                    #    deletion_trigger=True
+
+                    punctuation=["-","'","_"]
+                    if any(e in p_match for e in punctuation):
+                        await message.delete()
+
+                    #CD NN NNS NNP NNPS
+                    for i,j in n_match:
+                        print(i+","+j)
+                        if j not in ["CD", "NN", "NNS", "NNP", "NNPS","VB"]:
+                            deletion_trigger= True
+
+                    if deletion_trigger:
+                        reason+="Nouns only! \n"
+
+                    print(speak)
+                    if p_match[-1]!=".":
+                        deletion_trigger= True
+                        reason+="Full stop at the end only! \n"
+
+                    print("p_match: "+p_match)
+                    for i in p_match[:-1]:
+                        #print("i: "+i)
+                        if not (i.isupper() or i==" "):
+                            deletion_trigger= True
+                            reason_caps=True
+                    if reason_caps:
+                        reason+="Caps only! \n"
+
+                    len_split=p_pattern.sub("",speak)
+                    len_split=len(len_split.split())
+                    if (len_split>1):
+                        #print("1 word deletion triggered")
+                        deletion_trigger= True
+                        reason+="One word only! \n"
+
+                    if deletion_trigger:
+                        try:
+                            await message.author.send(reason)
+                        except Exception as e:
+                            print(e)
+
+                        await message.delete()
+                        print("DELETED")
+                    print("------------------------")
+                except:
+                    print("April failed:", sys.exc_info())
+                    raise
+
+        #custom messages. Mostly jokes.
+        if message.content==("DOCTOR NEFARIOUS"):
+            await message.channel.send("🍋")
+        elif message.content==("Kingfisher, play Despacito"):
+            await message.channel.send("ɴᴏᴡ ᴘʟᴀʏɪɴɢ: Despacito \n ───────────────⚪─────────────────── \n  ◄◄⠀▐▐ ⠀►►⠀⠀ ⠀ 1:17 / 3:48 ⠀ ───○ 🔊⠀ ᴴᴰ ⚙ ❐ ⊏⊐")
+        elif message.content==("F"):
+            await message.channel.send("f")
 
         await bot.process_commands(message)
 
@@ -503,7 +605,7 @@ async def on_command_error(context, exception):
             await context.send(exception)
 
         if not type(exception)==discord.ext.commands.errors.CommandNotFound:
-            print('Ignoring exception in command {}:'.format(context.command), file=sys.stderr)
+            print(f'Channel: {context.message.channel.name} \n Server: {context.guild.name} \n Ignoring exception in command {context.command}:', file=sys.stderr)
             traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
 
 
@@ -545,13 +647,42 @@ async def order66(ctx,cat_id=None):
     for i in category.text_channels:
         await ctx.send(f"Deleting {i.name}.")
         await i.delete()
-    await category.delete()
+    #await category.delete()  # keeping the empty category is actually a better idea
     await ctx.send(f"TERMINATION. AGREEMENT.")
 
+
+@bot.command(description="How many channels are in this server?",hidden=False)
+async def channels(ctx,):
+    counter=len(ctx.guild.channels)
+    await ctx.send(f"There are {counter} channels in this server.")
+
+
+@commands.check(owner_only)
+@bot.command(description="Prints memory usage.",hidden=True)
+async def mem(ctx,):
+    text="Locals --------"
+    print(f"MEM Variables, memory useage: \n  {text:>20}")
+
+    for name, size in sorted(((name, sys.getsizeof(value)) for name, value in locals().items()),
+                         key= lambda x: -x[1])[:10]:
+        print("{:>30}: {:>8}".format(name, await sizeof_fmt(size)))
+
+    text="Globals --------"
+    print(f"{text:>20}")
+
+    for name, size in sorted(((name, sys.getsizeof(value)) for name, value in globals().items()),
+                         key= lambda x: -x[1])[:10]:
+        print("{:>30}: {:>8}".format(name, await sizeof_fmt(size)))
+    
 
 @bot.command(description="Need help? Want to ask for new features? Visit the Nest, the central server for all your Kingfisher needs.")
 async def nest(ctx):
     await ctx.send("https://discord.gg/gxQVAbA")
+
+
+@bot.command(description="Default link to invite KF to your server. You need to be the owner or an admin!")
+async def invite(ctx):
+    await ctx.send("https://discordapp.com/oauth2/authorize?client_id=434701766425313280&scope=bot&permissions=271961280")
 
 
 @bot.command(description="Deletes message content",hidden=True)
@@ -642,12 +773,18 @@ async def die(ctx):
     if ctx.message.author.id not in owner:
         await ctx.send("No. Fuck off.")
         return
+
     global b_task
     global b_task2
     b_task.cancel()
     b_task2.cancel()
 
     schedstop.set()
+
+    # TODO needs to save og nickname 
+    # servs=bot.guilds
+    # for i in servs:
+    #     await i.me.edit(nick="Restarting...")
 
     await bot.close()
 
@@ -896,7 +1033,7 @@ async def augment(ctx, classification=None, card=None):
         return
     augcolour=discord.Colour(0xBF9000)
     classifications=["blaster","breaker","brute","changer","master","mover","shaker","stranger","striker","tinker","thinker","trump"]
-    cards=["fool","magi","priestess","lady","lord","pope","lovers","chariot","strength","hermit","wheel","justice","hanged","death","temperance","devil","tower","star","moon","sun","judgement","world"]
+    cards=["fool","magician","priestess","empress","emperor","hierophant","lovers","chariot","strength","hermit","wheel","justice","hanged","death","temperance","devil","tower","star","moon","sun","judgement","world"]
     if classification in cards:
         await ctx.send(augfeed[cards.index(classification)+1][1])
         return
@@ -905,10 +1042,12 @@ async def augment(ctx, classification=None, card=None):
         out=random.randint(1,len(augfeed)-1)
         if augfeed[out][augindex]!="":
             embed = discord.Embed(title=f"{classification.title()} Augment",description=augfeed[out][augindex],colour=augcolour)
+            embed.set_image(url=f"https://www.hivewiki.de/kingfisher/cards/{out-1}_{cards[out-1]}.png")
             await ctx.send(embed=embed)
             #await ctx.send(augfeed[out][augindex])
         else:
-            embed = discord.Embed(title=f"{classification.title()} Augment - General",description=f"**{augfeed[out][0].title()}**: {augfeed[out][1]}",colour=augcolour)
+            embed = discord.Embed(title=f"{classification.title()} Augment - General",description=f"**{augfeed[out][0].title()}**: {augfeed[out][1]}",colour=augcolour) 
+            embed.set_image(url=f"https://www.hivewiki.de/kingfisher/cards/{out-1}_{cards[out-1]}.png")
             await ctx.send(embed=embed)
             #await ctx.send(f"**{augfeed[out][0].title()}**: {augfeed[out][1]}")
     else:
@@ -918,7 +1057,9 @@ async def augment(ctx, classification=None, card=None):
             p_match=p_pattern.search(augs[i])
             if p_match:
                 if p_match.group()[:-1].casefold()==card.casefold():
-                    await ctx.send(embed=discord.Embed(title=f"{classification.title()} Augment",description=augs[i],colour=augcolour))
+                    embed=discord.Embed(title=f"{classification.title()} Augment",description=augs[i],colour=augcolour)
+                    embed.set_image(url=f"https://www.hivewiki.de/kingfisher/cards/{i-1}_{cards[i-1]}.png")
+                    await ctx.send(embed=embed)
                     return
                     #await ctx.send(augs[i])
         await ctx.send(f"No {card.title()} augment defined.")
@@ -1061,6 +1202,7 @@ async def add(ctx,title,comment=None,url=None):
         f.seek(0)
         yaml.dump(bm_feed,f)
     await ctx.message.add_reaction("✅")
+
 
 #TODO: fix this
 @bookmark.command(description="""Remove links from your bookmark. Use this CAREFULLY!
@@ -1300,6 +1442,31 @@ async def remove(ctx,name):
         yaml.dump(rp_factions,f)
 
 
+@bot.command(description="Manually increment accounts.")
+async def dh_increment(ctx,):
+    loc=ctx.message.guild.id
+
+    if not (ctx.author.id==242389360320839681 or ctx.author.id==138340069311381505):
+        await ctx.send("Not authorized.")
+        return
+    MF_channel = bot.get_channel(691369881039536178) #MF imperial-bank-of-dusthaven
+    #test_channel=bot.get_channel(435874236297379861) #nest test-dev
+    #691221976311660595
+
+    if os.path.isfile(f"cash{loc}.txt"):
+        print("Cash file exists")
+        with open(f"cash{loc}.txt",mode="r+") as g:
+            accounts = json.load(g)
+            g.seek(0)
+            g.truncate()
+            for i in accounts:
+                i[1]=i[1]+(i[2])
+            json.dump(accounts,g)
+        await MF_channel.send(f"Income computed.")
+    else:
+        await ctx.send(f"No accounts on file.")
+
+
 @bot.command(name="time",description="Stuck in bubble hell? Wonder when giao will be back?")
 async def _time(ctx,):
     utc=datetime.datetime.now(tz=pytz.utc)
@@ -1345,6 +1512,18 @@ async def _time(ctx,):
     embed.add_field(name=f"Canberra {aussies_dt.strftime(fmt_offset)}", value=aussies_dt.strftime(fmt), inline=True)
 
     await ctx.send(embed=embed)
+
+
+@bot.command(description="Let the fun begin.")
+@commands.check(gm_only)
+async def toggleFool(ctx):
+    global fools
+    if fools:
+        fools=False
+        await ctx.send("Disabled.")
+    else:
+        fools=True
+        await ctx.send("Enabled.")
 
 
 @bot.command(description="Saves a copy of the channel on the hivewiki server.")
@@ -1790,10 +1969,369 @@ async def show(ctx,title=None,user=None):
 
 
 @bot.command(description="See >tag roll for help",aliases=["nr"])
-async def newroll(ctx,):
-    d20=random.randint(1,20)
-    d6=random.randint(1,6)
-    await ctx.send(f"{d20}+{d6}={d20+d6}")
+async def newroll(ctx,formula="default",*comment):
+    loc=ctx.message.guild.id
+    base_modifier=0
+
+    s_id = await sid(loc)
+
+    if formula[0]=="$": #indicates a user macro
+        user=str(ctx.message.author.id)
+        if formula in macros[user]:
+            for i in macros[user][formula]:
+                if "#" in i:
+                    form=i.split("#")
+                    await ctx.invoke(roll,form[0]," ".join(form[1:]))
+                else:
+                    await ctx.invoke(roll,formula=i)
+        return
+    formula_in=formula
+
+    if comment==():
+        comment=""
+    if formula[0]=="#": #this is a fully standard roll, with a comment attached
+        comment2=(formula[1:],)
+        if comment!="":
+            comment=comment2+comment
+        else:
+            comment=comment2
+        formula="default"
+
+    if (s_id=="portland") and (formula=="default"):
+        formula="1d6"
+    elif formula=="default":
+        formula="1d20,1d6+0"
+    
+    modifier=0
+    print("formula: "+formula)
+    
+    bracketed=""
+    if ("(" in formula) and (")" in formula):
+        bracketed=[]
+        b_pattern=re.compile(r"\([^)]*\)") #everything enclosed in ()
+        b_match=b_pattern.finditer(formula)
+        for i in b_match:
+            #print(f"bracket_match: {i}")
+            bracketed.append(formula[i.start()+1:i.end()-1])
+        print("Bracketed "+str(bracketed))
+    
+    f_pattern=re.compile(r"(?P<node>(?P<prestack>[^(),dc]*\d*)(?P<dice>(?:D|C)*\d*)(?P<poststack>[^dD,)]*))",re.I)
+    # We're trying to identify the strings for each dice node
+    # a dice node being centered on a specific dice size, and then modified as needed
+    # There's dice nodes and then the full stack
+    # the stack applies to the full roll and is applied last
+    #pre and post stack are not functionally different, just a quality of life thing
+    #pre-stack can include how many dice are rolled (and taken highest of) but post cannot
+    
+    f_match=f_pattern.findall(formula)
+    start=0
+    groups=[]
+    rest_collector=[]
+    print(f"f_match {f_match}")
+    for i in f_match:  ##   CONTINUE HERE - make sure stuff outside of node isnt lost!
+        #print(f"f_match_i: {i}")
+        if any(i):
+            groups.append(i)
+    print(f"groups: {groups}")
+
+
+    rest=re.sub(f_pattern,"",formula)
+    print("rest: "+rest)
+
+    
+    if "D" in formula:
+        keep=False
+    else:
+        keep=True
+    #dice=int(d_match.group()[1:])
+
+    # if (s_id=="portland"):
+    #     dice=6
+    # else:
+    #     dice=20 #TODO wd6
+    # keep=True
+
+    #stack variables are the ones that affect the entire formula, not just single nodes of it
+    stack_modifier=0
+    stack_repeats=1
+    stack_keep=True
+    stack_brief=False
+    stack_explode=False
+    stack_high_low="High"
+    stack_crit=""
+    
+    stacks=len(groups)
+    print(f"stacks: {stacks}")
+    dice_s=[None]*stacks
+    dice_i=[1]*stacks
+    modifier=[0]*stacks
+    repeats=[1]*stacks
+    keep=[True]*stacks
+    brief=[False]*stacks
+    explode=[False]*stacks
+    bracket=[False]*stacks
+    high_low=["High"]*stacks
+    results=[None]*stacks
+    crit=[""]*stacks
+    
+
+    for node in range(0,stacks): #working through all the parts of the formula
+
+        print(f"group-node: {groups[node]}")
+        t_rest=list(groups[node])
+        t_rest[3]+=rest
+        print(f"group-node: {rest}")
+        groups[node]=tuple(t_rest)
+
+        #node 3 is the one containing all the flags
+
+        print(f"node: {groups[node]}")
+        print(f"node2: {groups[node][2]}")
+
+        if groups[node][0] in bracketed:
+            bracket[node]=True
+            print("Bracketed stack detected")
+
+
+        if (groups[node][0]==groups[node][1]) and (groups[node][0].isdigit()): #making sure the shorthand 1,1 etc works.
+            if node==0:
+                dice_s[node]=20
+                dice_i[node]=int(groups[node][1])
+                print(f"dice: d-{dice_s[node]}")
+                if stacks==1:
+                    modifier[node]=4
+                continue
+            if node==1:
+                dice_s[node]=6
+                dice_i[node]=int(groups[node][1])
+                print(f"dice: d-{dice_s[node]}")
+                continue
+
+        if groups[node][2]=="": #determining die size (d20, d6 etc)
+            if node==0:
+                dice_s[node]=20
+            elif node==1:
+                dice_s[node]=6
+            else:
+                print("Unknown die size!")
+        elif "c" in groups[node]:
+            dice_s[node]=10
+            modifier[node]=5
+            keep[node]=True
+        else:
+            dice_s[node]=int(groups[node][2][1:])
+        
+        print(f"dice: d-{dice_s[node]}")
+
+        if groups[node][1]: #determining how many dice are rolled
+            try:
+                dice_i[node]=int(groups[node][1])
+                print(f"dice_i: {dice_i}")
+            except (TypeError,ValueError):
+                await ctx.send("dice_i Error")
+
+        for part in groups[node]:
+            if ("+" in part) or ("-" in part): #determining modifier
+                if ("++" in part) or ("--" in part):
+                    mod_pattern=re.compile("(\+\+|\-\-)(\d)+")
+                    mod_match=mod_pattern.search(part)
+                    print(bracket[node])
+                    if bracket[node]:
+                        modifier[node]=int(mod_match.group()[1:])
+                    else:
+                        stack_modifier=int(mod_match.group()[1:])
+                    
+                    if "c" in part.casefold():
+                        modifier[node]+=5
+                    else:
+                        if bracket[node]:
+                            modifier[node]+=base_modifier
+                        else:
+                            stack_modifier+=base_modifier
+                else:
+                    mod_pattern=re.compile("(\+|\-)+(\d)+")
+                    mod_match=mod_pattern.search(part)
+                    print(mod_match)
+                    if bracket[node]:
+                        modifier[node]=int(mod_match.group())
+                    else:
+                        stack_modifier=int(mod_match.group())
+
+            else:
+                if dice_s[node]==20:
+                    modifier[node]=base_modifier+modifier[node]
+                
+            print(f"modifier: {modifier},{stack_modifier}")
+
+
+        if "b" in groups[node][3]:
+            if bracket[node]:
+                brief[node]=True
+            else:
+                stack_brief=True
+
+        if "x" in groups[node][3]:
+            if "xb" in groups[node][3]:
+                if bracket[node]:
+                    brief[node]=True
+                else:
+                    stack_brief=True
+                x_pattern=re.compile("xb(\d)*")
+                x_match=x_pattern.search(groups[node][3])
+                if x_match:
+                    if bracket[node]:
+                        repeats[node]=int(x_match.group()[2:])
+                    else:
+                        stack_repeats=int(x_match.group()[2:])
+            else:
+                if bracket[node]:
+                    brief[node]=True
+                else:
+                    stack_brief=True
+                x_pattern=re.compile("x(\d)*")
+                x_match=x_pattern.search(groups[node][3])
+                if x_match:
+                    if bracket[node]:
+                        repeats[node]=int(x_match.group()[1:])
+                    else:
+                        stack_repeats=int(x_match.group()[1:])
+        else:
+            if bracket[node]:
+                repeats[node]=1
+            else:
+                stack_repeats=1
+            
+        print(f"repeats: {stack_repeats}, {repeats[node]}")
+
+        if "!" in groups[node][3]:
+            if bracket[node]:
+                explode[node]=True
+            else:
+                stack_explode=True
+
+        if "D" in groups[node][2]:
+            if bracket[node]:
+                keep[node]=False
+            else:
+                stack_keep=False
+
+        if "p" in groups[node][3]:
+            if bracket[node]:
+                high_low[node]="Low"
+            else:
+                stack_high_low="Low"
+        
+        if (stack_repeats>10e3) or (repeats[node]>10e3) or (dice_s[node]>10e7) or (dice_i[node]>10e3): #safeguard against unnecessarily large rolls
+            await ctx.send("BRB, driving to the dice store. Oh no, looks like they're all out of dice, just like I am of fucks to give about your spammy rolls.")
+            return
+
+    requester=ctx.message.author.name
+    out_roll=[f"{requester}: `{formula}` ("] #this will be our output
+
+    for stack_repeat_loop in range(0,stack_repeats):
+        stack_crit=""
+        if stack_repeat_loop !=0:
+            out_roll.append(", ")
+        for node in range(0,stacks):
+            if node!=0:
+                out_roll.append(", (")
+            for repeat in range(0,repeats[node]): #bracketed
+                if (repeat!=0):
+                    out_roll.append(", (")
+                result=[]
+                for x in range(0,dice_i[node]):
+                    result.append(random.randint(1,dice_s[node]))
+                if explode[node] or stack_explode:
+                    loops=len(result)
+                    k=0
+                    while (k < loops):
+                        #print(k)
+                        if result[k]==dice_s[node]:
+                            result.append(random.randint(1,dice_s[node]))
+                            loops=len(result)
+                        k=k+1
+                        if k>100: #save us from infinite loops
+                            await ctx.send("Too many exploding dice! Help, everything is on fire!")
+                            break
+                result_i= [int(i) for i in result] #convert result to int
+
+                if keep[node] or stack_keep:
+                    if high_low[node]=="Low":
+                        highest=min(result_i)
+                    else:
+                        highest=max(result_i)
+                else:
+                    highest=sum(result)
+                #print(keep)
+                if keep[node] or stack_keep:
+                    for x in range(0,len(result_i)):
+                        if result_i[x]!=highest:
+                            out_roll.append("~~")
+                            out_roll.append(str(result_i[x]))
+                            out_roll.append("~~")
+                        else:
+                            out_roll.append(str(result_i[x]))
+                        if x!=len(result_i)-1:
+                            out_roll.append("+")
+                else:
+                    highest=sum(result)
+                    for x in range(0,len(result_i)):
+                            out_roll.append(str(result_i[x]))
+                            if x!=len(result_i)-1:
+                                out_roll.append("+")
+                out_roll.append(")")
+                if modifier[node]>0:
+                    out_roll.append("+")
+                if dice_s[node]==highest: #crit check
+                    crit[node]="__"
+                    if modifier[node] != 0:
+                        out_roll.append(f"{modifier[node]}=__**{highest+modifier[node]}**__")
+                    else:
+                        out_roll.append(f"=__**{highest+modifier[node]}**__")
+                elif modifier[node]==0:
+                    out_roll.append(f"=**{highest}**")
+                else:
+                    out_roll.append(f"{modifier[node]}=**{highest+modifier[node]}**")
+                results[node]=highest
+                #print(out_roll)
+            if brief[node] or stack_brief: #convert into shorthand if desired
+                out_saved=out_roll
+                out_roll=[f"{requester}: "]
+                brief_pattern=re.compile("\*\*-*\d+\*\*")
+                brief_match=brief_pattern.findall(''.join(out_saved))
+                for k in range(0,len(brief_match)):
+                    if k==len(brief_match)-1:
+                        critcheck=brief_match[k].replace("*","")
+                        if (int(critcheck)-modifier[node])==dice_s[node]:
+                            out_roll.append(f"__{brief_match[k]}__")
+                        else:
+                            out_roll.append(f"{brief_match[k]}")
+                    else:
+                        critcheck=brief_match[k].replace("*","")
+                        if (int(critcheck)-modifier[node])==dice_s[node]:
+                            out_roll.append(f"__{brief_match[k]}__, ")
+                        else:
+                            out_roll.append(f"{brief_match[k]}, ")
+            if dice_s[node]==20 and crit[node]=="__":
+                stack_crit="__"
+                
+        out_roll.append(" => ")
+        final_result=sum(results)
+        if final_result==sum(dice_s):
+            stack_crit="__"
+        
+        if stack_modifier>0:
+            out_roll.append("+")
+        if stack_modifier != 0:
+            out_roll.append(f"{stack_modifier}={stack_crit}**{final_result+stack_modifier}**{stack_crit}")
+        else:
+            out_roll.append(f"{stack_crit}**{final_result+stack_modifier}**{stack_crit}")
+    
+    if comment!="":
+        if comment[0]=="#" and comment[1]=="#":
+            comment=comment[1:]
+        out_roll.append(f" #{' '.join(comment)}")
+    await ctx.send(''.join(out_roll))
 
 
 #dice rolling.
@@ -2194,7 +2732,11 @@ async def start(ctx):
 async def end(ctx, force=False,invoked=False,): #start=False
 
     chan=ctx.channel.id
-    cur_turn=turn_tracker[chan]["turn"]
+    if chan in turn_tracker:
+        cur_turn=turn_tracker[chan]["turn"]
+    else:
+        await ctx.send("No fight saved. If you were in a fight, the bot might just have restarted.")
+        return
     rem_turn=cur_turn
     cur_round=turn_tracker[chan]["round"]
     #print(f"end: cur_turn {cur_turn} cur_round {cur_round}")
@@ -2329,7 +2871,7 @@ async def kick(ctx,*user):
             turn_tracker[chan]["order"].remove(i)
             turn_tracker[chan]["turn"]-=1
             await ctx.send(f"<@!{usr.id}> has been removed on Turn {turn_tracker[chan]['turn']}, Round {turn_tracker[chan]['round']}")
-            await ctx.invoke(end,"True",True)
+            #await ctx.invoke(end,"True",True)
             return
 
 
@@ -2651,9 +3193,17 @@ async def show(ctx, cape=None):
 @account.command(description="Use this to add your cape to the database and gain access to the other commands. Your cape name is your 'key'.", alias="create")
 async def make(ctx,cape=None,amount=0,income=0):
     loc=ctx.message.guild.id
-    if (ctx.message.channel.id != 478240151987027978 and ctx.message.channel.id != 435874236297379861 and ctx.message.channel.id != 537152965375688719
-            and ctx.guild.id!=457290411698814980 and ctx.message.channel.id != 638118490628292612 and ctx.message.channel.id != 691369881039536178):
-        await ctx.send("BoK only operates in #faction-actions!")
+    authorized_channels=[478240151987027978,435874236297379861,537152965375688719,638118490628292612,691369881039536178]
+    authorized_guilds=[457290411698814980]
+    if (ctx.message.channel.id not in authorized_channels and ctx.guild.id not in authorized_guilds):
+        auth_channel=False
+        for i in ctx.guild.channels:
+            if i.id in authorized_channels:
+                auth_channel=i.id
+        if auth_channel:
+            await ctx.send(f"BoK only operates in <#{auth_channel}>!")
+        else:
+            await ctx.send("This server is not configured to utilize the accounts system.")
         return
     if cape is None:
         await ctx.send("I do need a name for you if this is going to work.")
@@ -2684,9 +3234,17 @@ async def make(ctx,cape=None,amount=0,income=0):
 @account.command(aliases=["u"], description="Keep track of expenses and gains with this.")
 async def update(ctx,cape, amount):
     loc=ctx.message.guild.id
-    if (ctx.message.channel.id != 478240151987027978 and ctx.message.channel.id != 435874236297379861 and ctx.message.channel.id != 537152965375688719
-            and ctx.guild.id!=457290411698814980 and ctx.message.channel.id != 638118490628292612 and ctx.message.channel.id != 691369881039536178):
-        await ctx.send("BoK only operates in #faction-actions!")
+    authorized_channels=[478240151987027978,435874236297379861,537152965375688719,638118490628292612,691369881039536178]
+    authorized_guilds=[457290411698814980]
+    if (ctx.message.channel.id not in authorized_channels and ctx.guild.id not in authorized_guilds):
+        auth_channel=False
+        for i in ctx.guild.channels:
+            if i.id in authorized_channels:
+                auth_channel=i.id
+        if auth_channel:
+            await ctx.send(f"BoK only operates in <#{auth_channel}>!")
+        else:
+            await ctx.send("This server is not configured to utilize the accounts system.")
         return
     with open(f"cash{loc}.txt") as f:
         accounts = json.load(f)
@@ -2709,9 +3267,17 @@ async def update(ctx,cape, amount):
 @account.command(aliases=["s"], description="Send money to another account.")
 async def send(ctx,cape,target, amount):
     loc=ctx.message.guild.id
-    if (ctx.message.channel.id != 478240151987027978 and ctx.message.channel.id != 435874236297379861 and ctx.message.channel.id != 537152965375688719
-            and ctx.guild.id!=457290411698814980 and ctx.message.channel.id != 638118490628292612 and ctx.message.channel.id != 691369881039536178):
-        await ctx.send("BoK only operates in #faction-actions!")
+    authorized_channels=[478240151987027978,435874236297379861,537152965375688719,638118490628292612,691369881039536178]
+    authorized_guilds=[457290411698814980]
+    if (ctx.message.channel.id not in authorized_channels and ctx.guild.id not in authorized_guilds):
+        auth_channel=False
+        for i in ctx.guild.channels:
+            if i.id in authorized_channels:
+                auth_channel=i.id
+        if auth_channel:
+            await ctx.send(f"BoK only operates in <#{auth_channel}>!")
+        else:
+            await ctx.send("This server is not configured to utilize the accounts system.")
         return
     with open(f"cash{loc}.txt") as f:
         accounts = json.load(f)
@@ -2742,9 +3308,17 @@ async def send(ctx,cape,target, amount):
 @account.command(aliases=["i"], description="Adjust your periodic income here. Use the weekly amount.")
 async def income(ctx,cape, amount):
     loc=ctx.message.guild.id
-    if (ctx.message.channel.id != 478240151987027978 and ctx.message.channel.id != 435874236297379861 and ctx.message.channel.id != 537152965375688719
-            and ctx.guild.id!=457290411698814980 and ctx.message.channel.id != 638118490628292612 and ctx.message.channel.id != 691369881039536178):
-        await ctx.send("BoK only operates in #faction-actions!")
+    authorized_channels=[478240151987027978,435874236297379861,537152965375688719,638118490628292612,691369881039536178]
+    authorized_guilds=[457290411698814980]
+    if (ctx.message.channel.id not in authorized_channels and ctx.guild.id not in authorized_guilds):
+        auth_channel=False
+        for i in ctx.guild.channels:
+            if i.id in authorized_channels:
+                auth_channel=i.id
+        if auth_channel:
+            await ctx.send(f"BoK only operates in <#{auth_channel}>!")
+        else:
+            await ctx.send("This server is not configured to utilize the accounts system.")
         return
     with open(f"cash{loc}.txt") as f:
         accounts = json.load(f)
@@ -2768,7 +3342,7 @@ async def account_decay():
     await asyncio.sleep(60*1) #make sure the bot is initialized - this can be fixed better.
     while True:
 
-        locs=[465651565089259521,457290411698814980,691221976311660595] #testing 434729592352276480
+        locs=[465651565089259521,457290411698814980,] #testing 434729592352276480
         #The servers that money decay and income is enabled for.
         #Currently Grand Haven 465651565089259521 and WD LA 457290411698814980
         # duskhaven 691221976311660595
@@ -2812,7 +3386,7 @@ async def account_decay():
                             if loc==457290411698814980:
                                 await LA_channel.send(f"Daily Expenses computed. Total accrued wealth: {wealth}$")
                             if loc==691221976311660595:
-                                await MF_channel.send(f"Daily Income computed.")    
+                                await MF_channel.send(f"Daily Income computed.")
                             #if loc==434729592352276480:
                             #      print(test_channel)
                             #      await test_channel.send("henlo")

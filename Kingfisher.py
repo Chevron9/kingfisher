@@ -33,7 +33,7 @@ from PIL import Image, ImageDraw, ImageColor
 from ruamel.yaml import YAML
 from operator import itemgetter
 
-version = "0.3 Roll v2"
+version = "0.3a Roll v2"
 
 
 # TODO: add self-tagging, servers
@@ -1861,8 +1861,12 @@ async def wound(ctx, severity="Moderate", aim="Any", repeats=1,**typus):
                         if (i[2].casefold()==aimt.casefold()):
                             typlist.append(i)
                     elif limbaim is True:
-                        if i[2].casefold() in ["arm","legs"]:
-                            typlist.append(i)
+                        if exclusive is True:
+                            if i[2].casefold() in ["arm","legs"]:
+                                typlist.append(i)
+                        else:
+                            if i[2].casefold() in ["arm","legs","any"]:
+                                typlist.append(i)
                     elif (i[2].casefold()==aimt.casefold()) or (aimt.casefold()=="Any".casefold()) or (i[2]=="Any"):
                         typlist.append(i)
         embed=[]
@@ -2015,7 +2019,7 @@ async def newroll(ctx,formula="default",*comment):
             bracketed.append(formula[i.start()+1:i.end()-1])
         print("Bracketed "+str(bracketed))
     
-    f_pattern=re.compile(r"(?P<node>(?P<prestack>[^(),dc]*\d*)(?P<dice>(?:D|C)*\d*)(?P<poststack>[^dD,)]*))",re.I)
+    f_pattern=re.compile(r"(?P<node>(?P<prestack>[^(),dc]*\d*)(?P<dice>(?:D|C)*\d*)(?P<poststack>[^dD,()]*))",re.I)
     # We're trying to identify the strings for each dice node
     # a dice node being centered on a specific dice size, and then modified as needed
     # There's dice nodes and then the full stack
@@ -2034,15 +2038,9 @@ async def newroll(ctx,formula="default",*comment):
             groups.append(i)
     print(f"groups: {groups}")
 
-
     rest=re.sub(f_pattern,"",formula)
     print("rest: "+rest)
 
-    
-    if "D" in formula:
-        keep=False
-    else:
-        keep=True
     #dice=int(d_match.group()[1:])
 
     # if (s_id=="portland"):
@@ -2184,10 +2182,10 @@ async def newroll(ctx,formula="default",*comment):
                     else:
                         stack_repeats=int(x_match.group()[2:])
             else:
-                if bracket[node]:
-                    brief[node]=True
-                else:
-                    stack_brief=True
+                # if bracket[node]:
+                #     brief[node]=True
+                # else:
+                #     stack_brief=True
                 x_pattern=re.compile("x(\d)*")
                 x_match=x_pattern.search(groups[node][3])
                 if x_match:
@@ -2221,7 +2219,7 @@ async def newroll(ctx,formula="default",*comment):
             else:
                 stack_high_low="Low"
         
-        if (stack_repeats>10e3) or (repeats[node]>10e3) or (dice_s[node]>10e7) or (dice_i[node]>10e3): #safeguard against unnecessarily large rolls
+        if (stack_repeats>10e2) or (repeats[node]>10e3) or (dice_s[node]>10e7) or (dice_i[node]>10e3): #safeguard against unnecessarily large rolls
             await ctx.send("BRB, driving to the dice store. Oh no, looks like they're all out of dice, just like I am of fucks to give about your spammy rolls.")
             return
 
@@ -2235,6 +2233,8 @@ async def newroll(ctx,formula="default",*comment):
         for node in range(0,stacks):
             if node!=0:
                 out_roll.append(", (")
+            if repeats[node]>1:
+                    results[node]=[None]*repeats[node]
             for repeat in range(0,repeats[node]): #bracketed
                 if (repeat!=0):
                     out_roll.append(", (")
@@ -2292,7 +2292,12 @@ async def newroll(ctx,formula="default",*comment):
                     out_roll.append(f"=**{highest}**")
                 else:
                     out_roll.append(f"{modifier[node]}=**{highest+modifier[node]}**")
-                results[node]=highest
+                
+                if repeats[node]>1:
+                    results[node][repeat]=highest
+                else:
+                    results[node]=highest
+
                 #print(out_roll)
             if brief[node] or stack_brief: #convert into shorthand if desired
                 out_saved=out_roll
@@ -2316,22 +2321,35 @@ async def newroll(ctx,formula="default",*comment):
                 stack_crit="__"
                 
         out_roll.append(" => ")
-        final_result=sum(results)
+        print(f"results: {results}")
+        final_result=sum(results) #arrayize TODO
         if final_result==sum(dice_s):
             stack_crit="__"
         
         if stack_modifier>0:
             out_roll.append("+")
-        if stack_modifier != 0:
+        if stack_modifier != 0: 
             out_roll.append(f"{stack_modifier}={stack_crit}**{final_result+stack_modifier}**{stack_crit}")
+            if any(bracket): # make sure each bracketed result gets added
+                for i in results:
+                    out_roll.append(f"{stack_crit}**{i+stack_modifier}**{stack_crit}")
         else:
-            out_roll.append(f"{stack_crit}**{final_result+stack_modifier}**{stack_crit}")
+            if any(bracket): # make sure each bracketed result gets added
+                print(results)
+                for i in results:
+                    out_roll.append(f"{stack_crit}**{i+stack_modifier}**{stack_crit}")
+            else:
+                out_roll.append(f"{stack_crit}**{final_result+stack_modifier}**{stack_crit}")
+            
     
     if comment!="":
         if comment[0]=="#" and comment[1]=="#":
             comment=comment[1:]
         out_roll.append(f" #{' '.join(comment)}")
-    await ctx.send(''.join(out_roll))
+    try:
+        await ctx.send(''.join(out_roll))
+    except discord.ext.commands.errors.CommandInvokeError:
+        await ctx.send("Message too long!")
 
 
 #dice rolling.
@@ -2471,7 +2489,7 @@ async def roll(ctx,formula="default",*comment):
     #print(repeats)
     #print(dice)
     #print(i)
-    if (repeats>10e3) or (dice>10e7) or (i>10e3):
+    if (repeats>10e2) or (dice>10e7) or (i>10e3):
         await ctx.send("BRB, driving to the dice store. Oh no, looks like they're all out of dice, just like I am of fucks to give about your spammy rolls.")
         return
     for j in range(0,repeats):
@@ -2578,7 +2596,10 @@ async def roll(ctx,formula="default",*comment):
         await ctx.message.add_reaction("✅")
 
 
-    await ctx.send(''.join(out_roll))
+    try:
+        await ctx.send(''.join(out_roll))
+    except discord.ext.commands.errors.CommandInvokeError:
+        await ctx.send("Message too long!")
 
 tag_muted=False #global
 

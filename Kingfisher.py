@@ -814,6 +814,7 @@ async def qping(ctx,msg):
     #print(pinglist)
     await ctx.send(f"{ctx.author.display_name} questpings {pinglist}")
 
+@commands.check(owner_only)
 @bot.command(description="Assign a specific role to everyone who has reacted to this message.")
 async def qrole(ctx,msg,roleid):
     role=ctx.guild.get_role(int(roleid))
@@ -825,6 +826,7 @@ async def qrole(ctx,msg,roleid):
 
     #message = await ctx.channel.fetch_message(int(msg))
     pinglist=""
+    print(message.reactions)
     for i in message.reactions:
         async for user in i.users():
             await user.add_roles(role)

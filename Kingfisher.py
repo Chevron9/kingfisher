@@ -2714,22 +2714,25 @@ turn_tracker={}
 
                     This also supports re-shuffling init in the middle of a fight.
 
-                    If you are a QG, you can add NPCs via *>init 11 NPC1* (beta)
+                    If you are a QG, you can add NPCs via *>init 11 NPC1*
                     """)
 async def init(ctx, score:float, alias=None):
     chan=ctx.channel.id
     global turn_tracker
+    if alias is None:
+        a_id=ctx.author.id
+    else:
+        a_id=alias 
+
     if chan in turn_tracker.keys():
-        if alias is None:
-            a_id=ctx.author.id
-        else:
-            a_id=alias
         turn_tracker[chan]["init"].update({a_id:score})
     else:
-        if alias is None:
-            turn_tracker[chan]={"init":{ctx.author.id:score},"turn":0,"round":1,"started":False}
-        else:
-            turn_tracker[chan]={"init":{alias:score},"turn":0,"round":1,"started":False}
+        turn_tracker[chan]={"init":{a_id:score},"turn":0,"round":1,"started":False}
+
+    if "owner" in turn_tracker[chan]:
+        turn_tracker[chan]["owner"].update({a_id:ctx.author.id})
+    else:
+        turn_tracker[chan]["owner"]={a_id:ctx.author.id}
     await ctx.message.add_reaction("✅")
     #print(sorted(turn_tracker[chan]["init"].items(), key=lambda x:x[1],reverse=True))
     #print(turn_tracker)
@@ -2745,7 +2748,12 @@ async def start(ctx):
     cur_round=turn_tracker[chan]["round"]
     #await ctx.invoke(end,"True",start)
     if cur_round==1 and cur_turn==0:
-        await ctx.send(f"<@!{turn_tracker[chan]['order'][cur_turn][0]}> goes first!")
+        player=turn_tracker[chan]["owner"][turn_tracker[chan]['order'][cur_turn][0]]
+        if player!=turn_tracker[chan]['order'][cur_turn][0]:
+            player=f"**{turn_tracker[chan]['order'][cur_turn][0]}** controlled by <@!{player}>"
+        else:
+            player=f"<@!{player}>"
+        await ctx.send(f"{player} goes first!")
         turn_tracker[chan].update({"turn":cur_turn+1})
 
 
@@ -2762,7 +2770,9 @@ async def end(ctx, force=False,invoked=False,): #start=False
     cur_round=turn_tracker[chan]["round"]
     #print(f"end: cur_turn {cur_turn} cur_round {cur_round}")
     if invoked is False:
-        if turn_tracker[chan]['order'][cur_turn-1][0]!=ctx.author.id and force is False:
+        if ((turn_tracker[chan]['order'][cur_turn-1][0] != ctx.author.id) and 
+            (turn_tracker[chan]['owner'][turn_tracker[chan]['order'][cur_turn-1][0]] != ctx.author.id)  and 
+            (force is False)):
             await ctx.send("Not your turn! If player is afk or else, use >end True")
             return
 
@@ -2775,7 +2785,12 @@ async def end(ctx, force=False,invoked=False,): #start=False
         cur_round=turn_tracker[chan]["round"]
         rem_turn=cur_turn
 
-    await ctx.send(f"Turn {turn_tracker[chan]['round']} for <@!{turn_tracker[chan]['order'][cur_turn][0]}>")
+    player=turn_tracker[chan]["owner"][turn_tracker[chan]['order'][cur_turn][0]]
+    if player!=turn_tracker[chan]['order'][cur_turn][0]:
+        player=f"**{turn_tracker[chan]['order'][cur_turn][0]}** controlled by <@!{player}>"
+    else:
+        player=f"<@!{player}>"
+    await ctx.send(f"Turn {turn_tracker[chan]['round']} for {player}")
 
     #turn reminder logic
     if "reminder" in turn_tracker[chan]:
@@ -2818,10 +2833,11 @@ async def show(ctx,init="False"):
             except:
                 usr=i[1][0]
             #print(type(usr))
+            #print(usr)
             if isinstance(usr, discord.member.Member):
                 init_str+=((f"**{i[0]}**. {usr.display_name}  *{i[1][1]}*"+os.linesep))
             else:
-                init_str+=((f"**{i[0]}**. {usr}  *{i[1][1]}*"+os.linesep))
+                init_str+=((f"**{i[0]}**. {i[1][0]}  *{i[1][1]}*"+os.linesep))
         init_str=''.join(init_str)
         await ctx.send(init_str)
 
@@ -2838,7 +2854,7 @@ async def show(ctx,init="False"):
             if isinstance(usr, discord.member.Member):
                 order_str+=((f"**{i[0]}**. {usr.display_name}  *{i[1][1]}*"+os.linesep))
             else:
-                order_str+=((f"**{i[0]}**. {usr}  *{i[1][1]}*"+os.linesep))
+                order_str+=((f"**{i[0]}**. {i[1][0]}  *{i[1][1]}*"+os.linesep))
         order_str=''.join(order_str)
         await ctx.send(order_str)
 
@@ -2846,7 +2862,7 @@ async def show(ctx,init="False"):
 
 
 @bot.command(description="You can remove people (like KO'd characters) by using the >kick command on their turn, or entering their name.")
-@commands.cooldown(1,10,commands.BucketType.channel)
+@commands.cooldown(1,5,commands.BucketType.channel)
 async def kick(ctx,*user):
     #kick whoevers turn it is by default
     chan=ctx.channel.id

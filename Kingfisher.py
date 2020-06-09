@@ -814,6 +814,23 @@ async def qping(ctx,msg):
     #print(pinglist)
     await ctx.send(f"{ctx.author.display_name} questpings {pinglist}")
 
+@bot.command(description="Assign a specific role to everyone who has reacted to this message.")
+async def qrole(ctx,msg,roleid):
+    role=ctx.guild.get_role(int(roleid))
+    for i in ctx.guild.channels:
+        try:
+            message=await i.fetch_message(int(msg))
+        except:
+            pass
+
+    #message = await ctx.channel.fetch_message(int(msg))
+    pinglist=""
+    for i in message.reactions:
+        async for user in i.users():
+            await user.add_roles(role)
+    #print(pinglist)
+    await ctx.send(f"{role.mention} has been assigned to {len(message.reactions)} users.")
+
 
 #TODO: fix
 @bot.command(description="Used to send messages via Kingfisher to all servers.",hidden=True)

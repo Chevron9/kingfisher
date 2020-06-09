@@ -2358,9 +2358,6 @@ async def roll(ctx,formula="default",*comment):
     loc=ctx.message.guild.id
     s_id = await sid(loc)
 
-    #Added by Wendal for 'i' functionality
-    useInit = False
-
     if formula[0]=="$":
         user=str(ctx.message.author.id)
         if formula in macros[user]:
@@ -2408,17 +2405,6 @@ async def roll(ctx,formula="default",*comment):
                 dice=20
             keep=True
     #print(f"dice: {dice}")
-
-    #Added by Wendal
-    #Can be added to the if-else statement directly above, but figured separate was preferrable
-    if ("i" in formula.casefold):
-        #Sets it to simply roll 1+9
-        #This will get superceded down the line if the user adds more fanciness
-        i = 1
-        modifier = 9
-        keep = True
-
-        useInit = True
 
     if ("+" in formula) or ("-" in formula):
         if ("++" in formula) or ("--" in formula):
@@ -2573,29 +2559,6 @@ async def roll(ctx,formula="default",*comment):
         if comment[0]=="#" and comment[1]=="#":
             comment=comment[1:]
         out_roll.append(f" #{' '.join(comment)}")
-
-    #Added by Wendal
-    #Init tracking!
-    if useInit:
-        chan = ctx.channel.id
-        #global turn_tracker
-        if chan in turn_tracker.keys():
-            #Removing Alias logic and replaced it with comment
-            if comment != "":
-                a_id=ctx.author.id
-            else:
-                a_id=comment
-            turn_tracker[chan]["init"].update({a_id:highest+modifier})
-        else:
-            if comment != "":
-                turn_tracker[chan]={"init":{ctx.author.id:highest+modifier},"turn":0,"round":1,"started":False}
-            else:
-                turn_tracker[chan]={"init":{comment:highest+modifier},"turn":0,"round":1,"started":False}
-
-        #Genuinely couldn't think of a better way to show init recorded. Reacting to its own message seemed not possible.
-        await ctx.message.add_reaction("✅")
-
-
     try:
         await ctx.send(''.join(out_roll))
     except discord.ext.commands.errors.CommandInvokeError:

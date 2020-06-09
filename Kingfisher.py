@@ -829,7 +829,11 @@ async def qrole(ctx,msg,roleid):
     print(message.reactions)
     for i in message.reactions:
         async for user in i.users():
-            await user.add_roles(role)
+            try:
+                await user.add_roles(role)
+            except Exception as e:
+                            print(e)
+            await asyncio.sleep(10)
     #print(pinglist)
     await ctx.send(f"{role.mention} has been assigned to {len(message.reactions)} users.")
 

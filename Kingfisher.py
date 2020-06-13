@@ -481,6 +481,12 @@ async def on_message(message):
                 await target.send(f"**{message.content}** sent by {message.author.name}, ID `{message.author.id}` at {message.created_at}")
                 await message.delete()
 
+            #declare public for sunsetnova
+            elif message.channel.id==721220887910547486:
+                target=discord.utils.find(lambda m:m.id==721220928796885082,message.guild.channels)
+                await target.send(f"**{message.content}** sent by {message.author.name}, ID `{message.author.id}` at {message.created_at}")
+                await message.delete()
+
             #private-talk
             elif message.channel.id==603035662018543618:
                 target=discord.utils.find(lambda m:m.id==614168400523952181,message.guild.channels)
@@ -825,7 +831,7 @@ async def qrole(ctx,msg,roleid):
             pass
 
     #message = await ctx.channel.fetch_message(int(msg))
-    pinglist=""
+    pinglist=0
     print(message.reactions)
     for i in message.reactions:
         async for user in i.users():
@@ -834,8 +840,9 @@ async def qrole(ctx,msg,roleid):
             except Exception as e:
                             print(e)
             await asyncio.sleep(10)
+            pinglist += 1
     #print(pinglist)
-    await ctx.send(f"{role.mention} has been assigned to {len(message.reactions)} users.")
+    await ctx.send(f"{role.mention} has been assigned to {pinglist} users.")
 
 
 #TODO: fix

@@ -295,6 +295,8 @@ async def sid(loc):
         sid="Benelux"
     elif loc==691221976311660595:
         sid="dh"
+    elif loc==619043630187020299 or loc==721792672683130880:
+        sid="wd6"
     else:
         sid=str(loc)
     return sid
@@ -2410,7 +2412,7 @@ async def roll(ctx,formula="default",*comment):
             comment=comment2
         formula="default"
 
-    if (s_id=="portland") and (formula=="default"):
+    if ((s_id=="portland") or (s_id=="wd6")) and (formula=="default"):
         formula="1d6"
     elif formula=="default":
         formula="3d20+4"
@@ -2429,7 +2431,7 @@ async def roll(ctx,formula="default",*comment):
             modifier=5
             keep=True
         else:
-            if (s_id=="portland"):
+            if ((s_id=="portland") or (s_id=="wd6")):
                 dice=6
             else:
                 dice=20

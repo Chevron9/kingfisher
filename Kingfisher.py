@@ -1040,7 +1040,7 @@ async def perk(ctx, category=None):
     p_match=p_pattern.search(perksfeed[out][typus])
 
     #dealing with banned perks
-    bannedperks=[]
+    bannedperks=[] #no perks are banned currently
     while p_match.group()[:-1].casefold().replace(" ","") in bannedperks:
         print(f"banned perk rolled: {p_match.group()[:-1]}")
         out=random.randint(1,len(perksfeed)-3)
@@ -1796,7 +1796,7 @@ async def wound(ctx, severity="Moderate", aim="Any", repeats=1,**typus):
         f=0
     elif loc=="detroit":
         f=1 #detroit uses skitterdice
-    elif loc=="la" or loc=="gaming_inc" or loc=="autumn lane" or loc=="portland" or loc=="Benelux":
+    elif loc=="la" or loc=="gaming_inc" or loc=="autumn lane" or loc=="portland" or loc=="Benelux" or loc=="wd6":
         f=2
     elif loc=="test":
         f=0

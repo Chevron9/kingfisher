@@ -1372,29 +1372,38 @@ async def stopspam(ctx, i:int):
         await ctx.send("Insufficient priviliges.")
 
 
-@bot.command(description="Fuck you.",hidden=True)
+@bot.command(description="Prevents a user from using any KF commands.",hidden=True)
 async def mute(ctx,usr):
     if not ((ctx.message.author.id in owner) or ((ctx.message.author.id in gms) and await sid(ctx.message.guild.id)=="gh")):
         await ctx.send("This would be a fun game. But you already lost.")
         return
-    global muted_usr
-    if usr in owner:
+    
+
+    
+    user= await discord.ext.commands.UserConverter().convert(ctx,usr)
+    usr_id=user.id
+    if usr_id in owner:
         if ctx.message.author.id in owner:
             return
         await ctx.send("Oh, you're approaching me?")
-        await ctx.invoke(mute,usr=ctx.message.author.id)
-    muted_usr.append(ctx.message.guild.get_member_named(usr).id)
+        await ctx.invoke(mute,usr=str(ctx.message.author.id))
+        return
+
+    global muted_usr
+    muted_usr.append(usr_id)
     await ctx.send("I told them. Warned them.")
     print(f"{usr} has been muted.")
 
 
 @bot.command(description="un-Fuck you.",hidden=True)
 async def unmute(ctx,usr):
-    if ctx.message.author.id not in owner:
+    if not ((ctx.message.author.id in owner) or ((ctx.message.author.id in gms) and await sid(ctx.message.guild.id)=="gh")):
         await ctx.send("No Release.")
         return
     global muted_usr
-    muted_usr.remove(ctx.message.guild.get_member_named(usr).id)
+    user= await discord.ext.commands.UserConverter().convert(ctx,usr)
+    usr_id=user.id
+    muted_usr.remove(usr_id)
     await ctx.send("Finally free.")
     print(f"{usr} has been unmuted.")
 

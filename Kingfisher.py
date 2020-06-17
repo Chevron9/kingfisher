@@ -1374,10 +1374,15 @@ async def stopspam(ctx, i:int):
 
 @bot.command(description="Fuck you.",hidden=True)
 async def mute(ctx,usr):
-    if ctx.message.author.id not in owner:
+    if not ((ctx.message.author.id in owner) or ((ctx.message.author.id in gms) and await sid(ctx.message.guild.id)=="gh")):
         await ctx.send("This would be a fun game. But you already lost.")
         return
     global muted_usr
+    if usr in owner:
+        if ctx.message.author.id in owner:
+            return
+        await ctx.send("Oh, you're approaching me?")
+        await ctx.invoke(mute,usr=ctx.message.author.id)
     muted_usr.append(ctx.message.guild.get_member_named(usr).id)
     await ctx.send("I told them. Warned them.")
     print(f"{usr} has been muted.")

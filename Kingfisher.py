@@ -474,7 +474,7 @@ async def on_message(message):
             #TODO: change this to embeds!/make it pretty
             if message.channel.id==587718887936753710:
                 target=discord.utils.find(lambda m:m.id==587718930483773509,message.guild.channels)
-                await target.send(f"**{message.content}** sent by {message.author.name}, ID `{message.author.id}` at {message.created_at}")
+                await target.send(f"{message.content} *sent by {message.author.name}, ID `{message.author.id}` at {message.created_at}*")
                 await message.delete()
 
             #declare public for duskhaven
@@ -499,7 +499,7 @@ async def on_message(message):
                 target=discord.utils.get(target.reactions,emoji="\U0000270d") #writing hand
                 usrs=await target.users().flatten()
                 if message.author not in usrs:
-                    await message.channel.send(f"{message.author.mention}: Think you're above the rules, huh? Read the pins, you illiterate baboon. Denied.")
+                    await message.channel.send(f"{message.author.mention}: Think you're above the rules, huh? **Read the pins**, you illiterate baboon. Denied.")
                     await message.delete()
 
         global fools
@@ -805,22 +805,26 @@ async def diehard(ctx):
     await bot.close()
 
 
-@bot.command(description="Ping people who reacted to a specific message.")
+@bot.command(description="Ping people who reacted to a specific message. Works with message ID or message link.")
 async def qping(ctx,msg):
-    for i in ctx.guild.channels:
-        try:
-            message=await i.fetch_message(int(msg))
-        except:
-            pass
-            #print(f"{i.name} did not find message")
 
-    #message = await ctx.channel.fetch_message(int(msg))
+    try:
+        message= await discord.ext.commands.MessageConverter().convert(ctx,msg)
+    except:
+        for i in ctx.guild.channels:
+            try:
+                message=await i.fetch_message(int(msg))
+            except:
+                pass
+                #print(f"{i.name} did not find message")
+
     pinglist=""
     for i in message.reactions:
         async for user in i.users():
             pinglist=pinglist+(user.mention)+" "
     #print(pinglist)
-    await ctx.send(f"{ctx.author.display_name} questpings {pinglist}")
+    embed = discord.Embed(colour=discord.Colour(int("b5d7e4",16)),description=f"[Jump to orginal message]({message.jump_url})", timestamp=message.created_at)
+    await ctx.send(f"{ctx.author.display_name} questpings {pinglist}",embed=embed)
 
 @commands.check(owner_only)
 @bot.command(description="Assign a specific role to everyone who has reacted to this message.")

@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import asyncio
 import aiofiles
+import codecs
 import datetime
 import json
 import logging
@@ -1583,8 +1584,10 @@ async def archive(ctx,channel_id=None,cat_name=None):
         channel_id=ctx.channel.id
     chan=discord.utils.get(ctx.guild.text_channels,id=int(channel_id))
     await ctx.send(f"Collecting messages in {chan.name}....")
+    
     if not os.path.exists(f"archives/{ctx.guild.name}/"):
         os.mkdir(f"archives/{ctx.guild.name}/")
+    
     if cat_name is not None:
         if not os.path.exists(f"archives/{ctx.guild.name}/{cat_name}"):
             os.mkdir(f"archives/{ctx.guild.name}/{cat_name}/")
@@ -1595,9 +1598,11 @@ async def archive(ctx,channel_id=None,cat_name=None):
         if not os.path.exists(f"archives/{ctx.guild.name}/{chan.name}/"):
             os.mkdir(f"archives/{ctx.guild.name}/{chan.name}/")
         path = f"archives/{ctx.guild.name}/{chan.name}/"
+    
     messages = await chan.history(limit=None).flatten()
     messages.reverse()
     #print(len(messages))
+    
     output = f"{chan.name}\nThis archive was created at {datetime.datetime.now()} by {ctx.author.name}\n"
     output += f"\nPINNED MESSAGES START\n"
     for i in await chan.pins():
@@ -1632,7 +1637,7 @@ async def archive(ctx,channel_id=None,cat_name=None):
                             f = await aiofiles.open(f'{path}/{j.id}_{j.filename}', mode='wb')
                             await f.write(await resp.read())
                             await f.close()
-    with open(f'{path}/log.txt',mode="w") as f:
+    with open(f'{path}/log.txt',mode="w",encoding="utf-8") as f:
         print(output,file=f)
     await ctx.send(f"Archival completed.")
 
@@ -1650,6 +1655,7 @@ async def cat_archive(ctx,cat_id=None):
         #print(i.name)
         await ctx.invoke(archive,channel_id=i.id,cat_name=category.name)
     await ctx.send(f"Category archival completed.")
+    await ctx.invoke(order66,cat_id=cat_id)
 
 
 #TODO: Better QoL, list options, better configuration

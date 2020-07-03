@@ -231,7 +231,7 @@ async def on_ready():
         rp_factions=yaml.load(f)
         rp_factions=dict(rp_factions) #YAML can't handle tuples, so we have convert back
         for guilds in rp_factions:
-            rp_factions[guilds]=dict(rp_factions[guilds]) #we're also getting rid of all these fucki-annoying ordereddicts
+            rp_factions[guilds]=dict(rp_factions[guilds]) #we're also getting rid of all these fuck-annoying ordereddicts
         for guilds in rp_factions.keys():
             for k in rp_factions[guilds].keys():
                 rp_factions[guilds][k]=tuple(rp_factions[guilds][k])
@@ -1807,6 +1807,17 @@ async def toggle(ctx, req_role="Active"):
             await ctx.send("You can now post in #news-board. Role will be automatically revoked after 30 minutes.")
             await asyncio.sleep(60*30)
             await user.remove_roles(role)
+
+    elif req_role.casefold() in ["he".casefold(),"she".casefold(),"they".casefold()]:
+        role = discord.utils.get(user.guild.roles, name=req_role.casefold())
+        if role is None:
+            await ctx.send(f"No {req_role.casefold()} roles defined.")
+        if role in user.roles:
+            await user.remove_roles(role)
+            await ctx.message.add_reaction(bye_emoji)
+        else:
+            await user.add_roles(role)
+            await ctx.message.add_reaction("✅")
 
 
 #Rolls wounds off of the Weaverdice wound table.

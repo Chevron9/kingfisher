@@ -1808,7 +1808,7 @@ async def toggle(ctx, req_role="Active"):
             await asyncio.sleep(60*30)
             await user.remove_roles(role)
 
-    elif req_role.casefold() in ["he".casefold(),"she".casefold(),"they".casefold()]:
+    elif req_role.casefold() in ["he/him".casefold(),"she/her".casefold(),"they/them".casefold()]:
         role = discord.utils.get(user.guild.roles, name=req_role.casefold())
         if role is None:
             await ctx.send(f"No {req_role.casefold()} roles defined.")

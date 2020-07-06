@@ -157,6 +157,7 @@ muted_usr = []
 
 # Here you can modify the bot's prefix and description and whether it sends help in direct messages or not.
 bot = Bot(description=f"Thinkerbot version {version}", command_prefix=(">",";"), pm_help=False, case_insensitive=True,owner_id=138340069311381505)
+bot.stance_array={}
 
 
 # This is what happens every time the bot launches. In this case, it prints information like server count, user count the bot is connected to, and the bot id in the console.
@@ -1957,6 +1958,97 @@ async def wound(ctx, severity="Moderate", aim="Any", repeats=1,**typus):
             #embed.add_field(name="Severity", value=severity, inline=True)
             #embed.add_field(name="Aim", value=aim, inline=True)
     return True
+
+
+#Resolves stances
+@bot.command(aliases=["s"],
+             description="")
+async def stance(ctx, choice):
+    chan=ctx.channel.id
+    choice=choice.upper()
+    stance_bonuses = {"ST":{"atk":"Inflict the Stunned status effect","def":"Heal one lesser wound damage (not effect)"},
+                    "AO":{"atk":"+1 lesser effect","def":"+1 defense crit range"},
+                    "OF":{"atk":"Push your opponent one square (and/or follow them). Cannot wallbang","def":"Halve your opponent's movement on their next turn."},
+                    "CS":{"atk":{"ST":"Disable limb for a round","AO":"Confuse opponent for a round","OF":"Stagger opponent for a round","CS":"undefined"},
+                            "def":{"ST":"Disable limb for a round","AO":"Confuse opponent for a round","OF":"Stagger opponent for a round","CS":"undefined"}}}
+
+    if choice[0:2]=="||" and choice[-2:]=="||":
+        choice=choice[2:-2]
+
+    
+    if choice not in ["ST","AO","OF","CS"]:
+        await ctx.send("Sorry, but I don't recognize that stance. Please use the shorthands inside spoilers (e.g. ||ao||)!")
+        return
+    
+
+    if chan in bot.stance_array.keys():
+        bot.stance_array[chan].append({"player":ctx.author.display_name,"choice":choice})
+    else:
+        bot.stance_array[chan]=[{"player":ctx.author.display_name,"choice":choice}]
+
+    resolve=False
+    if len(bot.stance_array[chan])==2:
+        resolve = True   
+    if resolve==True:
+        for i in range(0,len(bot.stance_array[chan])):
+            if i != 0:
+                attacker_choice=bot.stance_array[chan][0]['choice']
+                defender_choice=bot.stance_array[chan][i]['choice']
+                await ctx.send(f"Attacker {bot.stance_array[chan][0]['player']} picked {attacker_choice} \n"
+                               f"Defender {bot.stance_array[chan][i]['player']} picked {defender_choice}")
+                if attacker_choice=="ST":
+                    if defender_choice=="ST":
+                        payoff="d6 winner gets 3"
+                    elif defender_choice=="AO":
+                        payoff="Attacker gains 1 Edge"
+                    elif defender_choice=="OF":
+                        payoff="Defender gets 2 Edge"
+                    elif defender_choice=="CS":
+                        payoff="Attacker gets 1 Edge"
+                if attacker_choice=="AO":
+                    if defender_choice=="ST":
+                        payoff="Defender gets 1 Edge"
+                    elif defender_choice=="AO":
+                        payoff="d6 winner gets 3"
+                    elif defender_choice=="OF":
+                        payoff="Attacker gets 3 Edge"
+                    elif defender_choice=="CS":
+                        payoff="Defender gets 2 Edge"
+                if attacker_choice=="OF":
+                    if defender_choice=="ST":
+                        payoff="Attacker gets 2 Edge"
+                    elif defender_choice=="AO":
+                        payoff="Defender gets 3 Edge"
+                    elif defender_choice=="OF":
+                        payoff="d6 winner gets 3"
+                    elif defender_choice=="CS":
+                        payoff="Attacker gets 1 Edge"
+                if attacker_choice=="CS":
+                    if defender_choice=="ST":
+                        payoff="Defender gets 1 Edge"
+                    elif defender_choice=="AO":
+                        payoff="Attacker gains 2 Edge"
+                    elif defender_choice=="OF":
+                        payoff="Defender gets 1 Edge"
+                    elif defender_choice=="CS":
+                        payoff="d6 winner gets 3"
+                await ctx.send(f"**{payoff}**")
+                if attacker_choice=="CS" or defender_choice=="CS":
+                    if attacker_choice=="CS" and defender_choice=="CS":
+                        await ctx.send(f"Attacker may gain {stance_bonuses[attacker_choice]['atk'][defender_choice]} \n"
+                                f"Defender may gain {stance_bonuses[defender_choice]['def'][attacker_choice]}")
+                    elif attacker_choice=="CS" and defender_choice!="CS":
+                        await ctx.send(f"Attacker may gain {stance_bonuses[attacker_choice]['atk'][defender_choice]} \n"
+                                f"Defender may gain {stance_bonuses[defender_choice]['def']}")
+                    elif attacker_choice!="CS" and defender_choice=="CS":
+                        await ctx.send(f"Attacker may gain {stance_bonuses[attacker_choice]['atk']} \n"
+                                f"Defender may gain {stance_bonuses[defender_choice]['def'][attacker_choice]}")
+                else:
+                    await ctx.send(f"Attacker may gain {stance_bonuses[attacker_choice]['atk']} \n"
+                                f"Defender may gain {stance_bonuses[defender_choice]['def']}")
+    #print(bot.stance_array)
+    
+    #await ctx.send(result)
 
 
 @bot.group(description="Save macros for use with the >roll function. Usage is >macro save $title 3d20+4 3d6x4 #comment - then use >roll $title.\

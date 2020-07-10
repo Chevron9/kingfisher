@@ -86,7 +86,8 @@ pactfeed = pactfeed.get_all_values()
 
 #Factions
 
-rp_factions = {"gh":{"neutral":(255,255,255), "independent":(163, 145, 108)},"dh":{"neutral":(255,255,255), "independent":(163, 145, 108)}}
+rp_factions = {"gh":{"neutral":(255,255,255), "independent":(163, 145, 108)},"dh":{"neutral":(255,255,255), "independent":(163, 145, 108)},
+                "ssn":{"neutral":(255,255,255), "independent":(163, 145, 108)}}
 #"x":ImageColor.getrgb("x"),
 # discord default colours: https://www.reddit.com/r/discordapp/comments/849bxc/what_are_the_hex_values_of_all_the_default_role/dvo5k3g/
 
@@ -149,6 +150,47 @@ rp_areas = {"gh":[(330.00,352.00),(412.00,226.00),(724.00,224.00),(688.00,350.00
                     (1432.50,540.00),
                     (1449.00,690.00),
                     (1422.00,985.50)]}
+
+rp_areas_dict= {"ssn": {'A1':(444.00,174.00),
+                'A2':(363.00,867.00),
+                'A3':(1341.00,561.00),
+                'A4':(942.00,438.00),
+                'A5':(1041.00,588.00),
+                'A6':(1074.00,945.00),
+                'A7':(903.00,762.00),
+                'A8':(798.00,969.00),
+                'A9':(588.00,882.00),
+                'A10':(693.00,441.00),
+                'B1':(720.00,1413.00),
+                'B2':(384.00,1539.00),
+                'B3':(621.00,1617.00),
+                'B4':(537.00,1809.00),
+                'B5':(372.00,1860.00),
+                'B6':(261.00,1671.00),
+                'C1':(1329.00,2070.00),
+                'C2':(1395.00,2187.00),
+                'C3':(1314.00,2301.00),
+                'C4':(1122.00,2202.00),
+                'C5':(1215.00,1977.00),
+                'D1':(2532.00,2184.00),
+                'D2':(2280.00,2097.00),
+                'D3':(2436.00,1971.00),
+                'D4':(2304.00,1812.00),
+                'D5':(2148.00,2022.00),
+                'D6':(2139.00,1821.00),
+                'E1':(2823.00,1683.00),
+                'E2':(2679.00,1488.00),
+                'E3':(2805.00,1341.00),
+                'E4':(2889.00,1263.00),
+                'E5':(2802.00,1050.00),
+                'E6':(2607.00,1023.00),
+                'F1':(1977.00,252.00),
+                'F2':(2358.00,822.00),
+                'F3':(1962.00,417.00),
+                'F4':(1983.00,513.00),
+                'F5':(1962.00,594.00),
+                'F6':(1965.00,699.00),
+                'F7':(1956.00,822.00)}}
 
 typ_colours = {"Bash":0x0137f6,"Pierce":0xffa500,"Cut":0xb22649,"Freeze":0x00ecff,"Shock":0xd6ff00,"Rend":0x9937a5,"Burn":0x0fe754, "Poison":0x334403,
                "Armor":0x565759,"Engine":0x565759,"Wheel":0x565759,"System":0x565759,"Structural":0x565759}
@@ -256,6 +298,18 @@ async def mapUpdate(faction,square,sid):
     detroitmap = Image.alpha_composite(detroitmap,legend)
     detroitmap.save(f"map_{sid}/map.png") #output
 
+async def mapUpdateDict(faction,square,sid):
+    square=square.upper()
+    detroitmap = Image.open(f"map_{sid}/factionmap.png")
+    legend = Image.open(f"map_{sid}/Legend_alpha.png")
+
+    ImageDraw.floodfill(detroitmap, rp_areas_dict[sid][square], (255,255,255))
+    ImageDraw.floodfill(detroitmap, rp_areas_dict[sid][square], rp_factions[sid][faction])
+
+    detroitmap.save(f"map_{sid}/factionmap.png") #only the coloured squares
+    detroitmap = Image.alpha_composite(detroitmap,legend)
+    detroitmap.save(f"map_{sid}/map.png") #output
+
 
 #used to display rankings
 async def int_to_roman(input):
@@ -280,7 +334,7 @@ async def sid(loc):
     elif loc==573815526133071873:
         sid="gh" #shardforge server, attached to GH
     elif loc==434729592352276480:
-        sid="gh" #aka nest, aka test server
+        sid="ssn" #aka nest, aka test server
     elif loc==406587085278150656:
         sid="segovia"
     elif loc==457290411698814980:
@@ -297,6 +351,8 @@ async def sid(loc):
         sid="Benelux"
     elif loc==691221976311660595:
         sid="dh"
+    elif loc==721135308497748048:
+        sid="ssn" #sunset nova
     elif loc==619043630187020299 or loc==721792672683130880:
         sid="wd6"
     else:
@@ -476,7 +532,7 @@ async def on_message(message):
             #TODO: change this to embeds!/make it pretty
             if message.channel.id==587718887936753710:
                 target=discord.utils.find(lambda m:m.id==587718930483773509,message.guild.channels)
-                await target.send(f"{message.content} *sent by {message.author.name}, ID `{message.author.id}` at {message.created_at}*")
+                await target.send(f"{message.content} \n*sent by {message.author.name}, ID `{message.author.id}` at {message.created_at}*")
                 await message.delete()
 
             #declare public for duskhaven
@@ -1145,12 +1201,27 @@ async def _map(ctx):
 
 
 @bot.command(description="Use this command to claim squares on the map. Faction name needs to be spelled right. Use >claim to see the current map. Use >claim factions to see available factions")
-async def claim(ctx,faction=None,square:int = None):
-    guild=await sid(ctx.message.guild.id)
-    if ((ctx.message.channel.id != 358409511838547979) and (ctx.message.channel.id != 435874236297379861) and (ctx.message.channel.id != 478240151987027978)
-        and (ctx.message.channel.id != 691405676920176751)):
+async def claim(ctx,faction=None,square = None):
+    try:
+        square = int(square)
+    except (TypeError, ValueError):
+        if square==None:
+            pass
+        else:
+            pass
 
-        await ctx.send(f"Can only claim in #faction-actions!")
+    guild=await sid(ctx.message.guild.id)
+    authorized_channels=[358409511838547979,435874236297379861,478240151987027978,691405676920176751,721206828297617498]
+    authorized_guilds = []
+    if (ctx.message.channel.id not in authorized_channels and ctx.guild.id not in authorized_guilds):
+        auth_channel=False
+        for i in ctx.guild.channels:
+            if i.id in authorized_channels:
+                auth_channel=i.id
+        if auth_channel:
+            await ctx.send(f"Can only claim in <#{auth_channel}>!")
+        else:
+            await ctx.send("This server is not configured to utilize the claim system.")
         return
 
     cacher=random.randint(1, 100000000000)
@@ -1162,11 +1233,14 @@ async def claim(ctx,faction=None,square:int = None):
         return
     elif faction is not None and square is None:
         await ctx.send("Correct format: >claim Faction Square")
-    try:
+    #try:
+    if type(square)==int:
         await mapUpdate(faction.casefold(),square,guild)
-    except (KeyError,IndexError):
-        await ctx.message.add_reaction("❌")
-        return
+    else:
+        await mapUpdateDict(faction.casefold(),square,guild)
+    # # # # except (KeyError,IndexError):
+    # # # #     await ctx.message.add_reaction("❌")
+    # # # #     return
     await ctx.send(f"Map updated. https://www.hivewiki.de/kingfisher/map_{guild}/map.png?nocaching={cacher}")
 
 
@@ -1518,6 +1592,28 @@ async def dh_increment(ctx,):
     else:
         await ctx.send(f"No accounts on file.")
 
+
+@bot.command(description="Manually increment accounts.")
+async def ssn_increment(ctx,):
+    loc=ctx.message.guild.id
+
+    if not (ctx.author.id==242389360320839681 or ctx.author.id==138340069311381505):
+        await ctx.send("Not authorized.")
+        return
+    MF_channel = bot.get_channel(721141339567161415) #battle-ooc for now
+
+    if os.path.isfile(f"cash{loc}.txt"):
+        print("Cash file exists")
+        with open(f"cash{loc}.txt",mode="r+") as g:
+            accounts = json.load(g)
+            g.seek(0)
+            g.truncate()
+            for i in accounts:
+                i[1]=i[1]+(i[2])
+            json.dump(accounts,g)
+        await MF_channel.send(f"Income computed.")
+    else:
+        await ctx.send(f"No accounts on file.")
 
 @bot.command(name="time",description="Stuck in bubble hell? Wonder when giao will be back?")
 async def _time(ctx,):
@@ -1965,6 +2061,10 @@ async def wound(ctx, severity="Moderate", aim="Any", repeats=1,**typus):
              description="")
 async def stance(ctx, choice):
     chan=ctx.channel.id
+
+    #delete the message!
+
+    
     choice=choice.upper()
     stance_bonuses = {"ST":{"atk":"Inflict the Stunned status effect","def":"Heal one lesser wound damage (not effect)"},
                     "AO":{"atk":"+1 lesser effect","def":"+1 defense crit range"},
@@ -3389,7 +3489,7 @@ async def show(ctx, cape=None):
 @account.command(description="Use this to add your cape to the database and gain access to the other commands. Your cape name is your 'key'.", alias="create")
 async def make(ctx,cape=None,amount=0,income=0):
     loc=ctx.message.guild.id
-    authorized_channels=[478240151987027978,435874236297379861,537152965375688719,638118490628292612,691369881039536178]
+    authorized_channels=[478240151987027978,435874236297379861,537152965375688719,638118490628292612,691369881039536178,721141339567161415]
     authorized_guilds=[457290411698814980]
     if (ctx.message.channel.id not in authorized_channels and ctx.guild.id not in authorized_guilds):
         auth_channel=False
@@ -3430,7 +3530,7 @@ async def make(ctx,cape=None,amount=0,income=0):
 @account.command(aliases=["u"], description="Keep track of expenses and gains with this.")
 async def update(ctx,cape, amount):
     loc=ctx.message.guild.id
-    authorized_channels=[478240151987027978,435874236297379861,537152965375688719,638118490628292612,691369881039536178]
+    authorized_channels=[478240151987027978,435874236297379861,537152965375688719,638118490628292612,691369881039536178,721141339567161415]
     authorized_guilds=[457290411698814980]
     if (ctx.message.channel.id not in authorized_channels and ctx.guild.id not in authorized_guilds):
         auth_channel=False
@@ -3463,7 +3563,7 @@ async def update(ctx,cape, amount):
 @account.command(aliases=["s"], description="Send money to another account.")
 async def send(ctx,cape,target, amount):
     loc=ctx.message.guild.id
-    authorized_channels=[478240151987027978,435874236297379861,537152965375688719,638118490628292612,691369881039536178]
+    authorized_channels=[478240151987027978,435874236297379861,537152965375688719,638118490628292612,691369881039536178,721141339567161415]
     authorized_guilds=[457290411698814980]
     if (ctx.message.channel.id not in authorized_channels and ctx.guild.id not in authorized_guilds):
         auth_channel=False
@@ -3504,7 +3604,7 @@ async def send(ctx,cape,target, amount):
 @account.command(aliases=["i"], description="Adjust your periodic income here. Use the weekly amount.")
 async def income(ctx,cape, amount):
     loc=ctx.message.guild.id
-    authorized_channels=[478240151987027978,435874236297379861,537152965375688719,638118490628292612,691369881039536178]
+    authorized_channels=[478240151987027978,435874236297379861,537152965375688719,638118490628292612,691369881039536178,721141339567161415]
     authorized_guilds=[457290411698814980]
     if (ctx.message.channel.id not in authorized_channels and ctx.guild.id not in authorized_guilds):
         auth_channel=False
@@ -3568,7 +3668,7 @@ async def account_decay():
                                 for i in accounts:
                                     if loc==465651565089259521 or loc==434729592352276480:
                                         i[1]=round(i[1]*decay)
-                                    if loc==691221976311660595:
+                                    if loc==691221976311660595 or loc==721135308497748048:
                                         i[1]=i[1]+(i[2])
                                     else:
                                         i[1]=i[1]+round((i[2]/7))

@@ -559,6 +559,14 @@ async def on_message(message):
                 if message.author not in usrs:
                     await message.channel.send(f"{message.author.mention}: Think you're above the rules, huh? **Read the pins**, you illiterate baboon. Denied.")
                     await message.delete()
+            elif message.channel.id==721206670730068050:
+                target=await message.channel.fetch_message(731041156519034880)
+                target=discord.utils.get(target.reactions,emoji="\U0001F476") #babu
+                usrs=await target.users().flatten()
+                if message.author not in usrs:
+                    await message.channel.send(f"""{message.author.mention}: Think you're above the rules, huh? **Read the pins**. 
+                                                Whatever god you pray to shall no longer accept your soul.""")
+                    await message.delete()
 
         global fools
         if fools: #april fools, enforce entity-speak ("AGREEMENT.")

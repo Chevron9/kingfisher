@@ -334,7 +334,7 @@ async def sid(loc):
     elif loc==573815526133071873:
         sid="gh" #shardforge server, attached to GH
     elif loc==434729592352276480:
-        sid="ssn" #aka nest, aka test server
+        sid="test" #aka nest, aka test server
     elif loc==406587085278150656:
         sid="segovia"
     elif loc==457290411698814980:
@@ -490,19 +490,42 @@ def mute_user(ctx):
 
 @bot.event
 async def on_member_join(member):
-    own = bot.get_user(owner[0])
+    # own = bot.get_user(owner[0])
     server=await sid(member.guild.id)
-    if (server=="gh") or (server=="test"):
-        await own.send(f"New player joined {member.guild.name}: {member.name} \n Account creation on {member.created_at}")
+    if (server=="gh"):
+        target_guild = member.guild
+        target =       discord.utils.find(lambda m:m.id==505835786810294272,target_guild.channels)
+        await target.send(f"New player joined {member.guild.name}: {member.name} \n Account creation on {member.created_at}")
+    if (server=="test"):
+        target_guild = member.guild
+        target =       discord.utils.find(lambda m:m.id==731108234785587210,target_guild.channels)
+        await target.send(f"New player joined {member.guild.name}: {member.name} \n Account creation on {member.created_at}")
 
 
 @bot.event
 async def on_member_remove(member):
-    own = bot.get_user(owner[0])
+     # own = bot.get_user(owner[0])
     server=await sid(member.guild.id)
-    if (server=="gh") or (server=="test"):
-        await own.send(f"{member.name} left {member.guild.name}")
+    if (server=="gh"):
+        target_guild = member.guild
+        target =       discord.utils.find(lambda m:m.id==505835786810294272,target_guild.channels)
+        await target.send(f"{member.name} left {member.guild.name}")
+    if (server=="test"):
+        target_guild = member.guild
+        target =       discord.utils.find(lambda m:m.id==731108234785587210,target_guild.channels)
+        await target.send(f"{member.name} left {member.guild.name}")
 
+@bot.event
+async def on_guild_join(guild):
+    target_guild = discord.utils.find(lambda m:m.id==434729592352276480,bot.guilds)
+    target =       discord.utils.find(lambda m:m.id==731108234785587210,target_guild.channels)
+    await target.send(f"Joined {guild.name}, owner is {guild.owner.display_name}.")
+
+@bot.event
+async def on_guild_remove(guild):
+    target_guild = discord.utils.find(lambda m:m.id==434729592352276480,bot.guilds)
+    target =       discord.utils.find(lambda m:m.id==731108234785587210,target_guild.channels)
+    await target.send(f"Left {guild.name}, owner is {guild.owner.display_name}.")
 
 @bot.event
 async def on_message_edit(before,after):
@@ -514,8 +537,6 @@ async def on_message_edit(before,after):
 
 @bot.event
 async def on_message(message):
-    #function for having private chats people can declare stuff into
-    #deletes the postings in one channel, then sends them to a different one
     try:
         #checks-public 587718887936753710
         #checks-private 587718930483773509
@@ -528,6 +549,16 @@ async def on_message(message):
         #test-beta 538633337191923714
         #test-dev 435874236297379861
         if not_me(message):
+            
+            #Forward DMs to whispers channel
+            if message.channel.type==discord.ChannelType.private:
+                target_guild = discord.utils.find(lambda m:m.id==434729592352276480,bot.guilds)
+                target =       discord.utils.find(lambda m:m.id==731108234785587210,target_guild.channels)
+                await target.send(f"DM \n {message.content} \n by {message.author.name}")
+
+
+            #function for having channels people can declare stuff into
+            #deletes the postings in one channel, then sends them to a different one
             #declare-public
             #TODO: change this to embeds!/make it pretty
             if message.channel.id==587718887936753710:
@@ -564,8 +595,8 @@ async def on_message(message):
                 target=discord.utils.get(target.reactions,emoji="\U0001F476") #babu
                 usrs=await target.users().flatten()
                 if message.author not in usrs:
-                    await message.channel.send(f"""{message.author.mention}: Think you're above the rules, huh? **Read the pins**. 
-                                                Whatever god you pray to shall no longer accept your soul.""")
+                    await message.channel.send(f"{message.author.mention}: Think you're above the rules, huh? **Read the pins**.", 
+                                                " Whatever god you pray to shall no longer accept your soul.")
                     await message.delete()
 
         global fools

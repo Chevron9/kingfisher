@@ -1582,7 +1582,13 @@ async def add(ctx,name,color):
             if k==name:
                 await ctx.send(f"Name already taken!")
                 return
-    rp_factions[guild][name.casefold()]=ImageColor.getrgb(color)
+    try:
+        rp_factions[guild][name.casefold()]=ImageColor.getrgb(color)
+    except Exception as e:
+        await ctx.send(f"Error when converting colour.")
+        print(e)
+        return
+
     print(rp_factions[guild])
     with open(f"rp_factions.yaml",mode="w+") as f:
         f.seek(0)

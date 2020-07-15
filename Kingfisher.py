@@ -904,6 +904,8 @@ async def die(ctx):
     b_task2.cancel()
 
     schedstop.set()
+    # todo add warning to fights in progress
+    # global 
 
     # TODO needs to save og nickname 
     # servs=bot.guilds
@@ -2090,10 +2092,10 @@ async def wound(ctx, severity="Moderate", aim="Any", repeats=1,**typus):
                             typlist.append(i)
                     elif limbaim is True:
                         if exclusive is True:
-                            if i[2].casefold() in ["arm","legs"]:
+                            if i[2].casefold() in ["arm".casefold(),"legs".casefold()]:
                                 typlist.append(i)
                         else:
-                            if i[2].casefold() in ["arm","legs","any"]:
+                            if i[2].casefold() in ["arm".casefold(),"legs".casefold(),"any".casefold()]:
                                 typlist.append(i)
                     elif (i[2].casefold()==aimt.casefold()) or (aimt.casefold()=="Any".casefold()) or (i[2]=="Any"):
                         typlist.append(i)

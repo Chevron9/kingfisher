@@ -534,6 +534,25 @@ async def on_message_edit(before,after):
         if (after.channel.id==435874236297379861) or (after.channel.id==465651565089259523) or (after.channel.id==478240151987027978):
             await after.delete()
 
+@bot.event
+async def on_raw_reaction_add(payload):
+    print(payload)
+    if payload.channel_id==435874236297379861 or payload.channel_id==731913135916711976:
+        guild = discord.utils.get(bot.guilds, id=payload.guild_id)
+        member = discord.utils.get(guild.members, id=payload.user_id)
+        utopia_role = discord.utils.get(guild.roles, name="U.T.O.P.I.A")
+        channel = discord.utils.get(guild.channels, id=payload.channel_id)
+        if utopia_role not in member.roles:
+            await channel.send(f"Voting machine goes brrrr. And {member.mention} is getting banned.")
+            message = await channel.fetch_message(payload.message_id)
+            for i in message.reactions:
+                async for user in i.users():
+                    if user==member:
+                        await i.remove(user)
+
+            #remove react
+
+
 
 @bot.event
 async def on_message(message):

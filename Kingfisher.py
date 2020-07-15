@@ -536,7 +536,7 @@ async def on_message_edit(before,after):
 
 @bot.event
 async def on_raw_reaction_add(payload):
-    print(payload)
+    #print(payload)
     if payload.channel_id==435874236297379861 or payload.channel_id==731913135916711976:
         guild = discord.utils.get(bot.guilds, id=payload.guild_id)
         member = discord.utils.get(guild.members, id=payload.user_id)

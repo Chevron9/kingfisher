@@ -866,7 +866,7 @@ async def remind(ctx,times,*,message=""):
     def check(reaction, user):
         return user != ctx.message.author and str(reaction.emoji) == '\N{Timer Clock}' and user != bot.user
 
-    timer_out=min(120.0,timer)
+    timer_out=min(60*5,timer)
     try: #ping everyone that also reacts to our react emoji
         reaction, user = await bot.wait_for('reaction_add', timeout=timer_out, check=check)
     except asyncio.TimeoutError:
@@ -1680,6 +1680,19 @@ async def ssn_increment(ctx,):
         await MF_channel.send(f"Income computed.")
     else:
         await ctx.send(f"No accounts on file.")
+
+@bot.command(description="Sends a reminder every 24 hours, 3 times")
+async def ssn_turntimer(ctx,):
+    await ctx.send("Turntimer activated. Turns starts now. Spend your assault within 24h.")
+    day=60*60*24
+    for i in range(0,4):
+        await asyncio.sleep(day)
+        if i !=3:
+            await ctx.send(f"1/4th of the campaign turn has passed, all factions refresh their assault. Day {i+2}. {3-i} Day(s) left.")
+        else:
+            await ctx.send("Turn over.")
+
+
 
 @bot.command(name="time",description="Stuck in bubble hell? Wonder when giao will be back?")
 async def _time(ctx,):

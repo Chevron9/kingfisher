@@ -2100,7 +2100,7 @@ async def wound(ctx, severity="Moderate", aim="Any", repeats=1,**typus):
         for i in feed[f]:
             if i[0].casefold()==typ.casefold():
                 if i[1].casefold()==severity.casefold():
-                    if exclusive is True:
+                    if (exclusive is True) and (limbaim is False):
                         if (i[2].casefold()==aimt.casefold()):
                             typlist.append(i)
                     elif limbaim is True:

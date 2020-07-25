@@ -1995,8 +1995,8 @@ async def toggle(ctx, req_role="Active"):
             await user.add_roles(role)
             await ctx.message.add_reaction("✅")
 
-    elif (req_role.casefold()=="Splatter Coach 💀".casefold()) and (loc=="ssn"):
-        role = discord.utils.get(user.guild.roles, name=req_role.casefold())
+    elif (req_role.casefold()=="Splatter".casefold()) and (loc=="ssn"):
+        role = discord.utils.get(user.guild.roles, name="Splatter Coach 💀")
         if role is None:
             await ctx.send(f"No {req_role.casefold()} role defined.")
         if role in user.roles:

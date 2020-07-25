@@ -1995,6 +1995,18 @@ async def toggle(ctx, req_role="Active"):
             await user.add_roles(role)
             await ctx.message.add_reaction("✅")
 
+    elif (req_role.casefold()=="Splatter Coach 💀".casefold()) and (loc=="ssn"):
+        role = discord.utils.get(user.guild.roles, name=req_role.casefold())
+        if role is None:
+            await ctx.send(f"No {req_role.casefold()} role defined.")
+        if role in user.roles:
+            await user.remove_roles(role)
+            await ctx.send("Weak, you Squishy!")
+        else:
+            await user.add_roles(role)
+            await ctx.send(random.choice(["Splat!","Casualty!","That's gonna leave a mark.","Splatter!","Turned into a stain.","Oof, ouch."]))
+
+
 
 #Rolls wounds off of the Weaverdice wound table.
 @bot.command(aliases=["bash","pierce","cut","freeze","shock","rend","burn", "poison"],

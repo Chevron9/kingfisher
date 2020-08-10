@@ -1683,12 +1683,15 @@ async def ssn_increment(ctx,):
 
 @bot.command(description="Sends a reminder every 24 hours, 3 times")
 async def ssn_turntimer(ctx,):
-    await ctx.send("Turntimer activated. Turns starts now. Spend your assault within 24h.")
+    await ctx.send("Turntimer activated. Turns starts now. Spend your assault within 24h. Don't forget about your floater assault.")
     day=60*60*24
     for i in range(0,4):
         await asyncio.sleep(day)
         if i !=3:
-            await ctx.send(f"1/4th of the campaign turn has passed, all factions refresh their assault. Day {i+2}. {3-i} Day(s) left.")
+            if 3-i == 1:
+                await ctx.send(f"{i+1}/4th(s) of the campaign turn has passed. Day {i+2}. {3-i} Day(s) left. Resolve all pending actions ASAP.")
+            else:
+                await ctx.send(f"{i+1}/4th(s) of the campaign turn has passed, all factions refresh their assault. Day {i+2}. {3-i} Day(s) left.")
         else:
             await ctx.send("Turn over.")
 

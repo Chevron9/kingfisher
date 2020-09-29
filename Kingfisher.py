@@ -45,7 +45,11 @@ version = "0.3a Roll v2"
 clientloop = asyncio.new_event_loop()
 asyncio.set_event_loop(clientloop)
 owner = [138340069311381505]  # hyper#4131
-gms= []
+gms= [] #People with the AGM role on Grand Haven
+
+#Privileged Intents
+#intents = discord.Intent()
+#intent.members=True
 
 stdlogger = logging.basicConfig(level=logging.INFO)
 # https://github.com/Rapptz/discord.py/search?q=on_command_error&unscoped_q=on_command_error
@@ -199,6 +203,7 @@ muted_usr = []
 
 # Here you can modify the bot's prefix and description and whether it sends help in direct messages or not.
 bot = Bot(description=f"Thinkerbot version {version}", command_prefix=(">",";"), pm_help=False, case_insensitive=True,owner_id=138340069311381505)
+#intents=intents
 bot.stance_array={}
 
 
@@ -279,6 +284,7 @@ async def on_ready():
             for k in rp_factions[guilds].keys():
                 rp_factions[guilds][k]=tuple(rp_factions[guilds][k])
 
+    bot.starboard= discord.utils.get(guild.channels, id=693999200316293120)
     print('Ready!')
 
 
@@ -551,6 +557,16 @@ async def on_raw_reaction_add(payload):
                         await i.remove(user)
 
             #remove react
+
+    #starboard
+    #bot.starboard
+    #if str(payload.emoji) == '\N{WHITE MEDIUM STAR}':
+    #    if 
+
+
+    #if reaction is an approve thing and an agm reacts, post it to newsboard with the right formatting
+    #if str(payload.emoji) == '\N{WHITE MEDIUM STAR}' and payload.channel_id==newsboard_approve:
+    #    pass
 
 
 

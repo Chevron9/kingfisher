@@ -48,8 +48,8 @@ owner = [138340069311381505]  # hyper#4131
 gms= [] #People with the AGM role on Grand Haven
 
 #Privileged Intents
-#intents = discord.Intent()
-#intent.members=True
+intent = discord.Intents.default()
+intent.members=True
 
 stdlogger = logging.basicConfig(level=logging.INFO)
 # https://github.com/Rapptz/discord.py/search?q=on_command_error&unscoped_q=on_command_error
@@ -202,8 +202,7 @@ muted_usr = []
 
 
 # Here you can modify the bot's prefix and description and whether it sends help in direct messages or not.
-bot = Bot(description=f"Thinkerbot version {version}", command_prefix=(">",";"), pm_help=False, case_insensitive=True,owner_id=138340069311381505)
-#intents=intents
+bot = Bot(description=f"Thinkerbot version {version}", command_prefix=(">",";"), pm_help=False, case_insensitive=True,owner_id=138340069311381505,intents=intent)
 bot.stance_array={}
 
 
@@ -284,7 +283,7 @@ async def on_ready():
             for k in rp_factions[guilds].keys():
                 rp_factions[guilds][k]=tuple(rp_factions[guilds][k])
 
-    bot.starboard= discord.utils.get(guild.channels, id=693999200316293120)
+    # bot.starboard= discord.utils.get(guild.channels, id=693999200316293120)
     print('Ready!')
 
 
@@ -543,7 +542,7 @@ async def on_message_edit(before,after):
 @bot.event
 async def on_raw_reaction_add(payload):
     #print(payload)
-    if payload.channel_id==435874236297379861 or payload.channel_id==731913135916711976:
+    if payload.channel_id==731913135916711976:
         guild = discord.utils.get(bot.guilds, id=payload.guild_id)
         member = discord.utils.get(guild.members, id=payload.user_id)
         utopia_role = discord.utils.get(guild.roles, name="U.T.O.P.I.A")
@@ -1508,7 +1507,7 @@ async def cape(ctx,*cape):
 async def avatar(ctx, user):
     if user is None:
         await ctx.send(">avatar [name]")
-    user=ctx.message.guild.get_member_named(user)
+    user=ctx.guild.get_member_named(user)
     if user is None:
         await ctx.message.add_reaction("❌")
     await ctx.send(user.avatar_url)

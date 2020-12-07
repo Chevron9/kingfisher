@@ -1510,7 +1510,7 @@ async def avatar(ctx, user):
     user=ctx.guild.get_member_named(user)
     if user is None:
         await ctx.message.add_reaction("❌")
-    await ctx.send(user.avatar_url)
+    await ctx.send(user.avatar_url_as(static_format="png"))
 
 
 @bot.command(description="No more %vial 5.",hidden=True)

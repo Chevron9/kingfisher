@@ -91,7 +91,7 @@ pactfeed = pactfeed.get_all_values()
 #Factions
 
 rp_factions = {"gh":{"neutral":(255,255,255), "independent":(163, 145, 108)},"dh":{"neutral":(255,255,255), "independent":(163, 145, 108)},
-                "ssn":{"neutral":(255,255,255), "independent":(163, 145, 108)}}
+                "ssn":{"neutral":(255,255,255), "independent":(163, 145, 108)},"nne":{"neutral":(255,255,255), "independent":(163, 145, 108)}}
 #"x":ImageColor.getrgb("x"),
 # discord default colours: https://www.reddit.com/r/discordapp/comments/849bxc/what_are_the_hex_values_of_all_the_default_role/dvo5k3g/
 
@@ -155,46 +155,137 @@ rp_areas = {"gh":[(330.00,352.00),(412.00,226.00),(724.00,224.00),(688.00,350.00
                     (1449.00,690.00),
                     (1422.00,985.50)]}
 
-rp_areas_dict= {"ssn": {'A1':(444.00,174.00),
-                'A2':(363.00,867.00),
-                'A3':(1341.00,561.00),
-                'A4':(942.00,438.00),
-                'A5':(1041.00,588.00),
-                'A6':(1074.00,945.00),
-                'A7':(903.00,762.00),
-                'A8':(798.00,969.00),
-                'A9':(588.00,882.00),
-                'A10':(693.00,441.00),
-                'B1':(720.00,1413.00),
-                'B2':(384.00,1539.00),
-                'B3':(621.00,1617.00),
-                'B4':(537.00,1809.00),
-                'B5':(372.00,1860.00),
-                'B6':(261.00,1671.00),
-                'C1':(1329.00,2070.00),
-                'C2':(1395.00,2187.00),
-                'C3':(1314.00,2301.00),
-                'C4':(1122.00,2202.00),
-                'C5':(1215.00,1977.00),
-                'D1':(2532.00,2184.00),
-                'D2':(2280.00,2097.00),
-                'D3':(2436.00,1971.00),
-                'D4':(2304.00,1812.00),
-                'D5':(2148.00,2022.00),
-                'D6':(2139.00,1821.00),
-                'E1':(2823.00,1683.00),
-                'E2':(2679.00,1488.00),
-                'E3':(2805.00,1341.00),
-                'E4':(2889.00,1263.00),
-                'E5':(2802.00,1050.00),
-                'E6':(2607.00,1023.00),
-                'F1':(1977.00,252.00),
-                'F2':(2358.00,822.00),
-                'F3':(1962.00,417.00),
-                'F4':(1983.00,513.00),
-                'F5':(1962.00,594.00),
-                'F6':(1965.00,699.00),
-                'F7':(1956.00,822.00)}}
+rp_areas_dict= {"ssn":{ 
+                    'A1':(444.00,174.00),
+                    'A2':(363.00,867.00),
+                    'A3':(1341.00,561.00),
+                    'A4':(942.00,438.00),
+                    'A5':(1041.00,588.00),
+                    'A6':(1074.00,945.00),
+                    'A7':(903.00,762.00),
+                    'A8':(798.00,969.00),
+                    'A9':(588.00,882.00),
+                    'A10':(693.00,441.00),
+                    'B1':(720.00,1413.00),
+                    'B2':(384.00,1539.00),
+                    'B3':(621.00,1617.00),
+                    'B4':(537.00,1809.00),
+                    'B5':(372.00,1860.00),
+                    'B6':(261.00,1671.00),
+                    'C1':(1329.00,2070.00),
+                    'C2':(1395.00,2187.00),
+                    'C3':(1314.00,2301.00),
+                    'C4':(1122.00,2202.00),
+                    'C5':(1215.00,1977.00),
+                    'D1':(2532.00,2184.00),
+                    'D2':(2280.00,2097.00),
+                    'D3':(2436.00,1971.00),
+                    'D4':(2304.00,1812.00),
+                    'D5':(2148.00,2022.00),
+                    'D6':(2139.00,1821.00),
+                    'E1':(2823.00,1683.00),
+                    'E2':(2679.00,1488.00),
+                    'E3':(2805.00,1341.00),
+                    'E4':(2889.00,1263.00),
+                    'E5':(2802.00,1050.00),
+                    'E6':(2607.00,1023.00),
+                    'F1':(1977.00,252.00),
+                    'F2':(2358.00,822.00),
+                    'F3':(1962.00,417.00),
+                    'F4':(1983.00,513.00),
+                    'F5':(1962.00,594.00),
+                    'F6':(1965.00,699.00),
+                    'F7':(1956.00,822.00)},
+                "nne":{
+                    '1.1' : (118.00,60.00),
+                    '1.2' : (84.00,118.00),
+                    '1.3' : (113.00,170.00),
+                    '1.4' : (91.00,215.00),
+                    '1.5' : (121.00,275.00),
+                    '1.6' : (85.00,320.00),
+                    '1.7' : (115.00,365.00),
+                    '1.8' : (89.00,418.00),
+                    '1.9' : (118.00,471.00),
+                    '1.10' : (89.00,522.00),
+                    '2.1' : (168.00,67.00),
+                    '2.2' : (135.00,117.00),
+                    '2.4' : (129.00,206.00),
+                    '2.5' : (171.00,265.00),
+                    '2.6' : (143.00,317.00),
+                    '2.7' : (172.00,369.00),
+                    '2.8' : (143.00,420.00),
+                    '2.9' : (173.00,470.00),
+                    '2.10' : (144.00,517.00),
+                    '3.1' : (227.00,69.00),
+                    '3.3' : (225.00,170.00),
+                    '3.4' : (212.00,221.00),
+                    '3.5' : (222.00,269.00),
+                    '3.7' : (220.00,366.00),
+                    '3.10' : (198.00,523.00),
+                    '4.1' : (280.00,63.00),
+                    '4.2' : (250.00,115.00),
+                    '4.3' : (280.00,167.00),
+                    '4.4' : (265.00,220.00),
+                    '4.5' : (283.00,270.00),
+                    '4.6' : (263.00,312.00),
+                    '4.7' : (297.00,367.00),
+                    '4.8' : (255.00,420.00),
+                    '4.9' : (284.00,462.00),
+                    '4.10' : (257.00,523.00),
+                    '5.1' : (348.00,69.00),
+                    '5.2' : (313.00,113.00),
+                    '5.3' : (349.00,166.00),
+                    '5.5' : (338.00,274.00),
+                    '5.7' : (343.00,363.00),
+                    '5.8' : (312.00,417.00),
+                    '5.9' : (343.00,472.00),
+                    '5.10' : (312.00,522.00),
+                    '6.1' : (394.00,71.00),
+                    '6.2' : (366.00,118.00),
+                    '6.4' : (375.00,220.00),
+                    '6.5' : (394.00,277.00),
+                    '6.6' : (369.00,315.00),
+                    '6.7' : (399.00,373.00),
+                    '6.9' : (407.00,467.00),
+                    '6.10' : (379.00,515.00),
+                    '7.1' : (453.00,58.00),
+                    '7.3' : (453.00,167.00),
+                    '7.5' : (456.00,270.00),
+                    '7.6' : (425.00,328.00),
+                    '7.7' : (450.00,367.00),
+                    '7.8' : (424.00,419.00),
+                    '7.9' : (451.00,473.00),
+                    '7.10' : (419.00,526.00),
+                    '8.1' : (508.00,70.00),
+                    '8.2' : (484.00,120.00),
+                    '8.3' : (523.00,172.00),
+                    '8.4' : (493.00,224.00),
+                    '8.5' : (508.00,274.00),
+                    '8.6' : (482.00,322.00),
+                    '8.7' : (512.00,366.00),
+                    '8.8' : (485.00,422.00),
+                    '8.9' : (516.00,465.00),
+                    '8.10' : (489.00,521.00),
+                    '9.1' : (564.00,73.00),
+                    '9.2' : (537.00,119.00),
+                    '9.3' : (575.00,166.00),
+                    '9.4' : (556.00,222.00),
+                    '9.5' : (568.00,266.00),
+                    '9.7' : (570.00,370.00),
+                    '9.8' : (551.00,417.00),
+                    '9.9' : (579.00,474.00),
+                    '9.10' : (550.00,517.00),
+                    '10.1' : (633.00,65.00),
+                    '10.2' : (592.00,123.00),
+                    '10.3' : (637.00,168.00),
+                    '10.4' : (593.00,217.00),
+                    '10.5' : (625.00,266.00),
+                    '10.6' : (602.00,327.00),
+                    '10.7' : (631.00,368.00),
+                    '10.8' : (603.00,420.00),
+                    '10.9' : (630.00,473.00),
+                    '11.4' : (649.00,212.00),
+                    '11.8' : (651.00,417.00)}}
 
 typ_colours = {"Bash":0x0137f6,"Pierce":0xffa500,"Cut":0xb22649,"Freeze":0x00ecff,"Shock":0xd6ff00,"Rend":0x9937a5,"Burn":0x0fe754, "Poison":0x334403,
                "Armor":0x565759,"Engine":0x565759,"Wheel":0x565759,"System":0x565759,"Structural":0x565759}
@@ -339,7 +430,8 @@ async def sid(loc):
     elif loc==573815526133071873:
         sid="gh" #shardforge server, attached to GH
     elif loc==434729592352276480:
-        sid="test" #aka nest, aka test server
+        #sid="test" #aka nest, aka test server
+        sid="nne"
     elif loc==406587085278150656:
         sid="segovia"
     elif loc==457290411698814980:
@@ -358,6 +450,8 @@ async def sid(loc):
         sid="dh"
     elif loc==721135308497748048:
         sid="ssn" #sunset nova
+    elif loc==791557854837735464:
+        sid="nne" #neon eden
     elif loc==619043630187020299 or loc==721792672683130880:
         sid="wd6"
     else:
@@ -825,14 +919,15 @@ async def invite(ctx):
 
 
 @bot.command(description="Deletes message content",hidden=True)
+@commands.check(gm_only)
 async def purge(ctx,limiter=100):
-    if ctx.message.author.id not in owner:
-        await ctx.send("😰")
+    if ctx.guild.id != 465651565089259521:
+        await ctx.send("You can't do this here.")
         return
     try:
         await ctx.message.channel.purge(limit=limiter,bulk=True)
     except discord.Forbidden:
-        await ctx.send("Insufficient priviliges.")
+        await ctx.send("Insufficient privileges.")
 
 
 @bot.command(description="Accepts a message, puts out information on who reacted to it",hidden=True)
@@ -1286,7 +1381,7 @@ async def claim(ctx,faction=None,square = None):
             pass
 
     guild=await sid(ctx.message.guild.id)
-    authorized_channels=[358409511838547979,435874236297379861,478240151987027978,691405676920176751,721206828297617498]
+    authorized_channels=[358409511838547979,435874236297379861,478240151987027978,691405676920176751,721206828297617498,798008156096823316]
     authorized_guilds = []
     if (ctx.message.channel.id not in authorized_channels and ctx.guild.id not in authorized_guilds):
         auth_channel=False
@@ -1513,16 +1608,6 @@ async def avatar(ctx, user):
     await ctx.send(user.avatar_url_as(static_format="png"))
 
 
-@bot.command(description="No more %vial 5.",hidden=True)
-async def stopspam(ctx, i:int):
-    if ctx.message.author.id not in owner:
-        return
-    try:
-        await ctx.message.channel.purge(limit=i)
-    except discord.Forbidden:
-        await ctx.send("Insufficient priviliges.")
-
-
 @bot.command(description="Prevents a user from using any KF commands.",hidden=True)
 async def mute(ctx,usr):
     if not ((ctx.message.author.id in owner) or ((ctx.message.author.id in gms) and await sid(ctx.message.guild.id)=="gh")):
@@ -1649,7 +1734,7 @@ async def remove(ctx,name):
         yaml.dump(rp_factions,f)
 
 
-@bot.command(description="Manually increment accounts.")
+@bot.command(description="Manually increment accounts.",hidden=True)
 async def dh_increment(ctx,):
     loc=ctx.message.guild.id
 
@@ -1674,7 +1759,7 @@ async def dh_increment(ctx,):
         await ctx.send(f"No accounts on file.")
 
 
-@bot.command(description="Manually increment accounts.")
+@bot.command(description="Manually increment accounts.",hidden=True)
 async def ssn_increment(ctx,):
     loc=ctx.message.guild.id
 
@@ -1696,7 +1781,7 @@ async def ssn_increment(ctx,):
     else:
         await ctx.send(f"No accounts on file.")
 
-@bot.command(description="Sends a reminder every 24 hours, 3 times")
+@bot.command(description="Sends a reminder every 24 hours, 3 times",hidden=True)
 async def ssn_turntimer(ctx,):
     await ctx.send("Turntimer activated. Turns starts now. Spend your assault within 24h. Don't forget about your floater assault.")
     day=60*60*24

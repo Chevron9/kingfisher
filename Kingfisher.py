@@ -452,7 +452,7 @@ async def sid(loc):
         sid="ssn" #sunset nova
     elif loc==791557854837735464:
         sid="nne" #neon eden
-    elif loc==619043630187020299 or loc==721792672683130880:
+    elif loc==619043630187020299 or loc==721792672683130880 or loc==799160040874836028:
         sid="wd6"
     else:
         sid=str(loc)

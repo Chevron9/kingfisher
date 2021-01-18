@@ -706,11 +706,18 @@ async def on_message(message):
                 await target.send(f"**{message.content}** sent by {message.author.name}, ID `{message.author.id}` at {message.created_at}")
                 await message.delete()
 
+            #declare public for neoneden
+            elif message.channel.id==800466708829306910:
+                target=discord.utils.find(lambda m:m.id==800466804345405492,message.guild.channels)
+                await target.send(f"**{message.content}** sent by {message.author.name}, ID `{message.author.id}` at {message.created_at}")
+                await message.delete()
+
             #private-talk
             elif message.channel.id==603035662018543618:
                 target=discord.utils.find(lambda m:m.id==614168400523952181,message.guild.channels)
                 await target.send(f"{message.author.name}: {message.content}")
-            #quest-requests
+            
+            #quest-requests - read pin and react with emoji or suffer
             elif message.channel.id==601810695583039557:
                 target=await message.channel.fetch_message(601812539319386123)
                 target=discord.utils.get(target.reactions,emoji="\U0000270d") #writing hand
@@ -718,6 +725,8 @@ async def on_message(message):
                 if message.author not in usrs:
                     await message.channel.send(f"{message.author.mention}: Think you're above the rules, huh? **Read the pins**, you illiterate baboon. Denied.")
                     await message.delete()
+            
+            #sunsetnova
             elif message.channel.id==721206670730068050:
                 target=await message.channel.fetch_message(731041156519034880)
                 target=discord.utils.get(target.reactions,emoji="\U0001F476") #babu
@@ -725,6 +734,16 @@ async def on_message(message):
                 if message.author not in usrs:
                     await message.channel.send(f"{message.author.mention}: Think you're above the rules, huh? **Read the pins**.", 
                                                 " Whatever god you pray to shall no longer accept your soul.")
+                    await message.delete()
+            
+            #neoneden
+            elif message.channel.id==797224416311246939:
+                target=await message.channel.fetch_message(798664589075546152)
+                target=discord.utils.get(target.reactions,emoji="\U0001F476") #babu
+                usrs=await target.users().flatten()
+                if message.author not in usrs:
+                    await message.channel.send(f"{message.author.mention}: Think you're above the rules, huh? **Read the pins**.", 
+                                                " May the Fomorians devour you.")
                     await message.delete()
 
         global fools
@@ -3780,8 +3799,10 @@ async def send(ctx,cape,target, amount):
             c2=i
     if c1 is False:
         await ctx.send(f"Cannot find sender {cape}.")
+        return
     if c2 is False:
         await ctx.send(f"Cannot find receiver {target}.")
+        return
     for i in accounts:
         if i[0]==cape.casefold():
             i[1]=i[1]+int(amount)*-1
